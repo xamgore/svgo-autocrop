@@ -3,7 +3,7 @@
 	"version": "1.1.2",
 	"packageManager": "pnpm@10.20.0",
 	"description": "SVGO plugin that reduces viewBox to minimum possible size so no wasted transparent space around svg",
-	"main": "index.js",
+	"main": "index.ts",
 	"bin": "./bin/svgo",
 	"keywords": [
 		"svgo",
@@ -24,10 +24,11 @@
 	"scripts": {
 		"fmt": "oxfmt .",
 		"fmt:check": "oxfmt --check .",
-		"lint": "oxlint . --jest-plugin --node-plugin",
+		"lint": "tsc --noEmit && oxlint . --jest-plugin --node-plugin",
 		"lint:fix": "oxlint . --jest-plugin --node-plugin --fix",
-		"report:visual": "node scripts/generate-visual-report.js",
-		"test": "jest"
+		"report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
+		"test": "jest",
+		"test:watch": "jest --watch"
 	},
 	"license": "MIT",
 	"dependencies": {
@@ -36,8 +37,42 @@
 		"svgo": "^2.8.0"
 	},
 	"devDependencies": {
+		"@swc/core": "^1.11.22",
+		"@swc/jest": "^0.2.39",
+		"@swc-node/register": "^1.11.1",
+		"@types/jest": "^30.0.0",
+		"@types/node": "^24.5.2",
 		"jest": "30.2.0",
 		"oxfmt": "^0.32.0",
-		"oxlint": "^1.47.0"
+		"oxlint": "^1.47.0",
+		"typescript": "^5.9.2"
+	},
+	"jest": {
+		"testEnvironment": "node",
+		"transform": {
+			"^.+\\.ts$": [
+				"@swc/jest",
+				{
+					"jsc": {
+						"target": "es2022",
+						"parser": {
+							"syntax": "typescript"
+						}
+					},
+					"module": {
+						"type": "commonjs"
+					}
+				}
+			]
+		},
+		"testMatch": [
+			"**/*.test.ts"
+		],
+		"moduleFileExtensions": [
+			"ts",
+			"js",
+			"json",
+			"node"
+		]
 	}
 }

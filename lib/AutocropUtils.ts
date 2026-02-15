@@ -1,15 +1,54 @@
-const Ensure = require('./Ensure');
+import type {PluginInfo, XastRoot} from 'svgo';
 
-const SvgRenderer = require('./ImageUtils');
-const SvgTranslate = require('./SvgTranslate');
-const SvgTranslateError = require('./SvgTranslateError');
-const SvgUtils = require('./SvgUtils');
+import Ensure from './Ensure';
+import SvgRenderer from './ImageUtils';
+import SvgTranslate from './SvgTranslate';
+import SvgTranslateError from './SvgTranslateError';
+import SvgUtils from './SvgUtils';
 
-module.exports = class AutocropUtils {
+type Viewbox = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+};
+
+type PaddingObject = {
+	top: unknown;
+	bottom: unknown;
+	left: unknown;
+	right: unknown;
+};
+
+type PaddingFunction = (
+	viewboxNew: Viewbox,
+	viewbox: Viewbox,
+	ast: XastRoot,
+	params: AutocropParams,
+	info: PluginInfo,
+) => void;
+
+export type AutocropParams = {
+	autocrop?: boolean;
+	includeWidthAndHeightAttributes?: boolean;
+	padding?: number | PaddingObject | PaddingFunction;
+	disableTranslate?: boolean;
+	removeClass?: boolean;
+	removeStyle?: boolean;
+	removeDeprecated?: boolean;
+	setColor?: string;
+	setColorIssue?: string;
+	disableTranslateWarning?: boolean;
+	debug?: boolean;
+	debugWriteFiles?: boolean | string;
+	[key: string]: unknown;
+};
+
+export default class AutocropUtils {
 	/**
 	 * See 'README.md#Parameters' for documentation on supported parameters.
 	 */
-	static plugin(ast, params, info) {
+	static plugin(ast: XastRoot, params: AutocropParams = {}, info: PluginInfo): void {
 		try {
 			// Get <svg> attributes
 			let attribs = AutocropUtils.getSvgAttribs(ast);
@@ -26,7 +65,9 @@ module.exports = class AutocropUtils {
 			attribs.height = '' + viewbox.height;
 			let svg = SvgUtils.js2svg(ast);
 
-			// Only render svg on first first call. We still do everything else - like translate - because after <svg> is optimised, translate may be able to succeed if it was previously failing.
+			// Only render the SVG on the first call.
+			// We still do everything else (like translate) because after the <svg>
+			// is optimized, translate may succeed if it was previously failing.
 			let viewboxNew;
 			let multipassCount = info.multipassCount;
 			if (multipassCount !== 0 || params.autocrop === false) {
@@ -62,7 +103,12 @@ module.exports = class AutocropUtils {
 		}
 	}
 
-	static getViewboxWithoutPadding(svg, viewbox, params, info) {
+	static getViewboxWithoutPadding(
+		svg: string,
+		viewbox: Viewbox,
+		params: AutocropParams,
+		info: PluginInfo,
+	): Viewbox {
 		// Render svg to rgba pixels using resvg and calculate non-transparent bounds.
 		let bounds = SvgRenderer.getBounds(
 			svg,
@@ -86,29 +132,36 @@ module.exports = class AutocropUtils {
 		};
 	}
 
-	static addPadding(viewboxNew, viewbox, ast, params, info) {
-		let padding = params.padding;
+	static addPadding(
+		viewboxNew: Viewbox,
+		viewbox: Viewbox,
+		ast: XastRoot,
+		params: AutocropParams,
+		info: PluginInfo,
+	): void {
+		const padding = params.padding;
 		if (!padding) {
 			return;
 		}
-		let type = typeof padding;
-		if (type == 'number') {
+		if (typeof padding === 'number') {
 			viewboxNew.x -= padding;
 			viewboxNew.y -= padding;
 			viewboxNew.width += padding * 2;
 			viewboxNew.height += padding * 2;
-		} else if (type == 'object') {
-			let top = Ensure.integer(padding.top, 'padding.top');
-			let bottom = Ensure.integer(padding.bottom, 'padding.bottom');
-			let left = Ensure.integer(padding.left, 'padding.left');
-			let right = Ensure.integer(padding.right, 'padding.right');
+		} else if (typeof padding === 'object') {
+			const paddingObject = padding as PaddingObject;
+			let top = Ensure.integer(paddingObject.top, 'padding.top');
+			let bottom = Ensure.integer(paddingObject.bottom, 'padding.bottom');
+			let left = Ensure.integer(paddingObject.left, 'padding.left');
+			let right = Ensure.integer(paddingObject.right, 'padding.right');
 
 			viewboxNew.x -= left;
 			viewboxNew.y -= top;
 			viewboxNew.width += left + right;
 			viewboxNew.height += top + bottom;
-		} else if (type == 'function') {
-			padding(viewboxNew, viewbox, ast, params, info);
+		} else if (typeof padding === 'function') {
+			const paddingFunction = padding as PaddingFunction;
+			paddingFunction(viewboxNew, viewbox, ast, params, info);
 		} else {
 			throw Ensure.unexpectedObject('Unsupported padding specified', padding);
 		}
@@ -117,7 +170,12 @@ module.exports = class AutocropUtils {
 	/**
 	 * @return Returns true if successful or did nothing. Returns false if failure - and will need to roll back ast
 	 */
-	static translate(ast, params, viewboxNew, multipassCount) {
+	static translate(
+		ast: XastRoot,
+		params: AutocropParams,
+		viewboxNew: Viewbox,
+		multipassCount: number,
+	): boolean {
 		if (params.disableTranslate) {
 			return true; // Nothing to do.
 		}
@@ -172,7 +230,7 @@ module.exports = class AutocropUtils {
 		return true;
 	}
 
-	static getSvgAttribs(ast) {
+	static getSvgAttribs(ast: XastRoot): Record<string, string> {
 		let nodes = ast.children;
 		let nodeCount;
 		if (!nodes || (nodeCount = nodes.length) <= 0) {
@@ -195,13 +253,12 @@ module.exports = class AutocropUtils {
 		return Ensure.notNull(svg.attributes, '<svg> attributes');
 	}
 
-	static getDebugWriteFilePrefix(params, info) {
-		let value = params.debugWriteFiles;
+	static getDebugWriteFilePrefix(params: AutocropParams, info: PluginInfo): string | null {
+		const value = params.debugWriteFiles;
 		if (!value) {
 			return null;
 		}
-		let type = typeof value;
-		if (type == 'boolean') {
+		if (typeof value === 'boolean') {
 			let path = info.path;
 			if (!path) {
 				throw new Error(
@@ -209,35 +266,37 @@ module.exports = class AutocropUtils {
 				);
 			}
 			return path;
-		} else if (type == 'string') {
+		} else if (typeof value === 'string') {
 			return value;
 		} else {
-			throw new Ensure.unexpectedObject(
+			throw Ensure.unexpectedObject(
 				"Unknown 'debugWriteFiles' params value specified",
 				value,
 			);
 		}
 	}
 
-	static isIncludeWidthAndHeightAttributes(params, attribs) {
-		let flag = params.includeWidthAndHeightAttributes;
-		let type = typeof flag;
-		if (type == 'undefined') {
+	static isIncludeWidthAndHeightAttributes(
+		params: AutocropParams,
+		attribs: Record<string, string>,
+	): boolean {
+		let flag: unknown = params.includeWidthAndHeightAttributes;
+		if (typeof flag === 'undefined') {
 			// Default to including only if already included in svg.
 			flag = attribs.width || attribs.height;
-		} else if (type != 'boolean') {
+		} else if (typeof flag !== 'boolean') {
 			throw Ensure.unexpectedObject(
 				"Invalid 'includeWidthAndHeightAttributes' param - expected either 'boolean' or 'undefined' (which defaults to true/false depending on whether svg already includes a width/height",
 				flag,
 			);
 		}
-		return flag;
+		return !!flag;
 	}
 
 	/**
 	 * @return Returns object taking the form {x, y, width, height}.
 	 */
-	static getViewbox(attribs) {
+	static getViewbox(attribs: Record<string, string>): Viewbox {
 		let viewbox = attribs.viewBox;
 		let x, y, width, height;
 		if (!viewbox) {
@@ -250,9 +309,7 @@ module.exports = class AutocropUtils {
 			let array = viewbox.split(/[ ,]+/);
 			if (array instanceof Array && array.length != 4) {
 				throw new Error(
-					"Invalid <svg viewbox='" +
-						viewbox +
-						"'> attribute - expected viewbox to specify 4 parts.",
+					`Invalid <svg viewbox='${viewbox}'> attribute - expected viewbox to specify 4 parts.`,
 				);
 			}
 			x = Ensure.integer(array[0], '<svg viewbox[0]>');
@@ -263,20 +320,24 @@ module.exports = class AutocropUtils {
 		return { x, y, width, height };
 	}
 
-	static setViewbox(attribs, viewbox, includeWidthAndHeightAttributes) {
+	static setViewbox(
+		attribs: Record<string, string>,
+		viewbox: Viewbox,
+		includeWidthAndHeightAttributes: boolean,
+	): void {
 		let width = viewbox.width;
 		let height = viewbox.height;
 
 		// Either update or set width/height
 		if (includeWidthAndHeightAttributes) {
-			attribs.width = '' + width;
-			attribs.height = '' + height;
+			attribs.width = `${width}`;
+			attribs.height = `${height}`;
 		} else {
 			delete attribs.width;
 			delete attribs.height;
 		}
 
 		// Set viewbox
-		attribs.viewBox = viewbox.x + ' ' + viewbox.y + ' ' + width + ' ' + height;
+		attribs.viewBox = `${viewbox.x} ${viewbox.y} ${width} ${height}`;
 	}
-};
+}

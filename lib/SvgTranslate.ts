@@ -1,9 +1,18 @@
-const Ensure = require('./Ensure');
+import { SVGPathData } from 'svg-pathdata';
+import Ensure from './Ensure';
+import SvgTranslateError from './SvgTranslateError';
 
-const { SVGPathData } = require('svg-pathdata');
-const SvgTranslateError = require('./SvgTranslateError');
+export default class SvgTranslate {
+	x;
+	y;
+	multipassCount;
+	removeClass;
+	removeStyle;
+	removeDeprecated;
+	setColor;
+	previousColor;
+	setColorIssue;
 
-module.exports = class SvgTranslate {
 	/**
 	 * @removeClass If true, then delete 'class' attribute.
 	 * @removeStyle If true, then delete 'style' and other styling attributes.
@@ -14,7 +23,7 @@ module.exports = class SvgTranslate {
 	constructor(
 		x,
 		y,
-		multipassCount,
+		multipassCount = 0,
 		removeClass = false,
 		removeStyle = false,
 		removeDeprecated = false,

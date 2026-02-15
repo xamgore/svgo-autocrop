@@ -1,6 +1,6 @@
-const util = require('util');
+import util from 'node:util';
 
-module.exports = class Ensure {
+export default class Ensure {
 	static unexpectedObject(message, obj) {
 		return new Error(message + ': ' + util.inspect(obj, { showHidden: false, depth: 2 }));
 	}
@@ -51,11 +51,11 @@ module.exports = class Ensure {
 			} else {
 				throw Ensure.unexpectedObject(
 					"Expected type 'number' (or 'string' that can be converted to 'number') for " +
-						objDescription +
+						valueDescription +
 						", instead '" +
 						type +
 						"'",
-					obj,
+					value,
 				);
 			}
 		}

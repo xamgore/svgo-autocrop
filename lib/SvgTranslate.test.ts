@@ -1,5 +1,5 @@
-const SvgUtils = require('./SvgUtils');
-const SvgTranslate = require('./SvgTranslate');
+import SvgTranslate from './SvgTranslate';
+import SvgUtils from './SvgUtils';
 
 function assertTranslate(svg, x, y, expectedSvg) {
 	let ast = SvgUtils.svg2js(svg);

@@ -1,9 +1,8 @@
-const Ensure = require('./Ensure');
+import fs from 'node:fs';
+import { Resvg } from '@resvg/resvg-js';
+import Ensure from './Ensure';
 
-const { Resvg } = require('@resvg/resvg-js');
-const fs = require('fs');
-
-module.exports = class ImageUtils {
+export default class ImageUtils {
 	/**
 	 * Render svg and return width/height and bounds of visible pixels.
 	 *

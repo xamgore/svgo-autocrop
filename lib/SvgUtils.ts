@@ -1,21 +1,22 @@
-const { stringifySvg } = require('svgo/lib/stringifier');
-const { parseSvg } = require('svgo/lib/parser');
+import { parseSvg } from 'svgo/lib/parser';
+import { stringifySvg } from 'svgo/lib/stringifier';
+import type { XastRoot } from 'svgo';
 
-module.exports = class SvgUtils {
+export default class SvgUtils {
 	/**
 	 * Parse the SVG/XML string provided - and return the javascript in-memory representation.
 	 *
 	 * @param str SVG/XML string.
 	 * @param path Optional SVG path - only used if reporting error.
 	 */
-	static svg2js(str, path) {
+	static svg2js(str: string, path?: string): XastRoot {
 		return parseSvg(str, path);
 	}
 
 	/**
 	 * Format the AST/Javascript in-memory representation back to the SVG/XML string.
 	 */
-	static js2svg(ast) {
+	static js2svg(ast: XastRoot): string {
 		return stringifySvg(ast).data;
 	}
 };

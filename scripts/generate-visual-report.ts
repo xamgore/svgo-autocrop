@@ -1,12 +1,10 @@
-'use strict';
-
-const fs = require('fs');
-const path = require('path');
-const Module = require('module');
+import fs from 'node:fs';
+import Module from 'node:module';
+import path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '..');
-const TEST_FILE = path.join(ROOT, 'test', 'index.test.js');
-const SNAPSHOT_FILE = path.join(ROOT, 'test', '__snapshots__', 'index.test.js.snap');
+const TEST_FILE = path.join(ROOT, 'test', 'index.test.ts');
+const SNAPSHOT_FILE = path.join(ROOT, 'test', '__snapshots__', 'index.test.ts.snap');
 const OUTPUT_FILE = path.join(ROOT, 'test', 'visual-report.html');
 const PREVIEW_SIZE = 60;
 
@@ -26,7 +24,8 @@ function collectCasesFromTests() {
 	const cases = [];
 	let currentTestName = null;
 
-	const originalLoad = Module._load;
+	const moduleInternal = Module as any;
+	const originalLoad = moduleInternal._load;
 
 	function it(name, fn) {
 		currentTestName = name;
@@ -43,7 +42,7 @@ function collectCasesFromTests() {
 		};
 	}
 
-	Module._load = function patchedLoad(request, parent, isMain) {
+	moduleInternal._load = function patchedLoad(request, parent, isMain) {
 		if (request === '@jest/globals') {
 			return { it, expect };
 		}
@@ -72,7 +71,7 @@ function collectCasesFromTests() {
 	const testModulePath = require.resolve(TEST_FILE);
 	delete require.cache[testModulePath];
 	require(testModulePath);
-	Module._load = originalLoad;
+	moduleInternal._load = originalLoad;
 
 	return cases.sort((a, b) => compareCaseIds(a.caseId, b.caseId));
 }

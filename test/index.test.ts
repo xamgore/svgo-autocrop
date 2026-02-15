@@ -4,11 +4,11 @@
  * Modified copy of https://github.com/svg/svgo/tree/master/test/plugins (see _index.test.js).
  */
 
-const PATH = require('path');
-const { EOL } = require('os');
-const { optimize } = require('svgo');
-const { it, expect } = require('@jest/globals');
-const autocrop = require('../index');
+import { EOL } from 'node:os';
+import * as PATH from 'node:path';
+import { optimize, type Plugin } from 'svgo';
+import autocrop = require('../index');
+import type { AutocropParams } from '../lib/AutocropUtils';
 
 it('01 - 10x10 box - viewBox - no parameters.', function () {
 	doTest(
@@ -357,8 +357,8 @@ it('21 - Delete redundant: color="currentColor" overflow="visible". Also set fil
 	);
 });
 
-function doTest(caseId, input, params = {}) {
-	const plugin = {
+function doTest(caseId: string, input: string, params: AutocropParams = {}) {
+	const plugin: Plugin<AutocropParams> = {
 		...autocrop,
 		params: params,
 	};

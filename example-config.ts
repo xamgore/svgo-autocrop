@@ -1,4 +1,4 @@
-const autocrop = require('svgo-autocrop');
+import autocrop = require('svgo-autocrop');
 
 /**
  * The below configuration is for monotone (i.e. single color) svgs. Any colour will be replaced with 'currentColor' so the color is inherited from the html/css.
@@ -6,7 +6,7 @@ const autocrop = require('svgo-autocrop');
  * If your svgs contain multiple colours, then remove the 'setColor'/'setColorIssue' attributes.
  */
 
-module.exports = {
+const config = {
 	multipass: true, // Keep running optimisations until doesn't optimise anymore.
 	plugins: [
 		{
@@ -52,3 +52,5 @@ module.exports = {
 		},
 	],
 };
+
+export = config;

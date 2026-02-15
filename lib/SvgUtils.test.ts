@@ -1,4 +1,4 @@
-const SvgUtils = require('./SvgUtils');
+import SvgUtils from './SvgUtils';
 
 function assertSvg(svg) {
 	expect(SvgUtils.js2svg(SvgUtils.svg2js(svg))).toBe(svg);
