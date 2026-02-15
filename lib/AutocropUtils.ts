@@ -2,7 +2,7 @@ import type { PluginInfo, XastRoot, XastElement } from 'svgo';
 
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
-import SvgTranslate from './SvgTranslate';
+import SvgTranslate, { ColorIssueReaction } from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
 import { js2svg } from './SvgUtils';
 
@@ -37,7 +37,7 @@ export type AutocropParams = {
 	removeStyle?: boolean;
 	removeDeprecated?: boolean;
 	setColor?: string;
-	setColorIssue?: string;
+	setColorIssue?: ColorIssueReaction;
 	disableTranslateWarning?: boolean;
 	debug?: boolean;
 	debugWriteFiles?: boolean | string;

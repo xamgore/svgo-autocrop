@@ -5,6 +5,8 @@ import { SVGPathData } from 'svg-pathdata';
 import Ensure from './Ensure';
 import SvgTranslateError from './SvgTranslateError';
 
+export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
+
 export default class SvgTranslate {
 	private previousColor: string | null;
 
@@ -23,7 +25,7 @@ export default class SvgTranslate {
 		private removeStyle = false,
 		private removeDeprecated = false,
 		private setColor: string | null = null,
-		private setColorIssue: string | null = null,
+		private setColorIssue: ColorIssueReaction | null = null,
 	) {
 		// Used to store lowercase color previously encountered.
 		// If 'setColor' is defined, and we encounter more than one color, then we fail.
@@ -93,7 +95,8 @@ export default class SvgTranslate {
 				attr === 'width' ||
 				attr === 'height' ||
 				attr === 'xmlns' ||
-				attr === 'enable-background'
+				attr === 'enable-background' ||
+				attr === 'preserveAspectRatio'
 			) {
 				// Ignore
 			} else if (attr === 'version' || attr === 'baseProfile') {
@@ -220,18 +223,28 @@ export default class SvgTranslate {
 						node,
 					);
 				}
-			} else if (
-				attr === 'id' ||
-				attr === 'opacity' ||
-				attr === 'display' ||
-				attr.startsWith('fill-') ||
-				attr.startsWith('stroke-') ||
-				attr.startsWith('clip-') ||
-				attr.startsWith('xmlns:') ||
-				attr.startsWith('xml:')
-			) {
-				return; // Can somewhat safely ignore these.
-			}
+				} else if (
+					attr === 'id' ||
+					attr === 'opacity' ||
+					attr === 'display' ||
+					attr === 'role' ||
+					attr === 'tabindex' ||
+					attr === 'focusable' ||
+					attr === 'preserveAspectRatio' ||
+					attr === 'pointer-events' ||
+					attr === 'shape-rendering' ||
+					attr === 'color-rendering' ||
+					attr === 'text-rendering' ||
+					attr.startsWith('fill-') ||
+					attr.startsWith('stroke-') ||
+					attr.startsWith('clip-') ||
+					attr.startsWith('aria-') ||
+					attr.startsWith('data-') ||
+					attr.startsWith('xmlns:') ||
+					attr.startsWith('xml:')
+				) {
+					return; // Can somewhat safely ignore these.
+				}
 		}
 		throw Ensure.unexpectedObject(`Unhandled <${node.name} ${attr}> attribute`, node);
 	}
