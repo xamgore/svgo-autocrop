@@ -1,3 +1,5 @@
+// noinspection HtmlUnknownAttribute,HtmlDeprecatedAttribute,HttpUrlsUsage
+
 'use strict';
 
 /**
@@ -7,11 +9,12 @@
 import { EOL } from 'node:os';
 import * as PATH from 'node:path';
 import { optimize, type Plugin } from 'svgo';
-import autocrop = require('../index');
+
 import type { AutocropParams } from '../lib/AutocropUtils';
+import autocrop = require('../index');
 
 it('01 - 10x10 box - viewBox - no parameters.', function () {
-	doTest(
+	const actual = runPlugin(
 		'01',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -22,10 +25,11 @@ it('01 - 10x10 box - viewBox - no parameters.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("02 - 10x10 box - viewBox - 'includeWidthAndHeightAttributes' parameter.", function () {
-	doTest(
+	const actual = runPlugin(
 		'02',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -37,10 +41,11 @@ it("02 - 10x10 box - viewBox - 'includeWidthAndHeightAttributes' parameter.", fu
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('03 - 10x10 box - width/height - no parameters.', function () {
-	doTest(
+	const actual = runPlugin(
 		'03',
 		`
         <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -51,10 +56,11 @@ it('03 - 10x10 box - width/height - no parameters.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("04 - 10x10 box - width/height - 'includeWidthAndHeightAttributes' parameter.", function () {
-	doTest(
+	const actual = runPlugin(
 		'04',
 		`
         <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -66,10 +72,11 @@ it("04 - 10x10 box - width/height - 'includeWidthAndHeightAttributes' parameter.
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('05 - 11x11 box.', function () {
-	doTest(
+	const actual = runPlugin(
 		'05',
 		`
         <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -81,10 +88,11 @@ it('05 - 11x11 box.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('06 - 12x12 box.', function () {
-	doTest(
+	const actual = runPlugin(
 		'06',
 		`
         <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
@@ -96,10 +104,11 @@ it('06 - 12x12 box.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('07 - 12x12 box.', function () {
-	doTest(
+	const actual = runPlugin(
 		'07',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -111,10 +120,11 @@ it('07 - 12x12 box.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("08 - '$' sign.", function () {
-	doTest(
+	const actual = runPlugin(
 		'08',
 		`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -127,10 +137,11 @@ it("08 - '$' sign.", function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('09 - 10x10 box - viewBox - padding 1px.', function () {
-	doTest(
+	const actual = runPlugin(
 		'09',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -142,10 +153,11 @@ it('09 - 10x10 box - viewBox - padding 1px.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('10 - 10x10 box - viewBox - padding 2px.', function () {
-	doTest(
+	const actual = runPlugin(
 		'10',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -157,10 +169,11 @@ it('10 - 10x10 box - viewBox - padding 2px.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('11 - 10x10 box - viewBox - padding custom 1.', function () {
-	doTest(
+	const actual = runPlugin(
 		'11',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -177,10 +190,11 @@ it('11 - 10x10 box - viewBox - padding custom 1.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('12 - 10x10 box - viewBox - padding custom 2.', function () {
-	doTest(
+	const actual = runPlugin(
 		'12',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -197,10 +211,11 @@ it('12 - 10x10 box - viewBox - padding custom 2.', function () {
 			debugWriteFiles: false,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("13 - 12x12 box - with unsupported 'unsupported' attribute preventing translate back to (0,0).", function () {
-	doTest(
+	const actual = runPlugin(
 		'13',
 		`
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -210,10 +225,11 @@ it("13 - 12x12 box - with unsupported 'unsupported' attribute preventing transla
 			disableTranslateWarning: true,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("14 - Messy 'icon-43-note-remove.svg'", function () {
-	doTest(
+	const actual = runPlugin(
 		'14',
 		`
         <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -230,10 +246,11 @@ it("14 - Messy 'icon-43-note-remove.svg'", function () {
         </svg>`,
 		{},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("15 - Bootstrap 'tornado.svg'", function () {
-	doTest(
+	const actual = runPlugin(
 		'15',
 		`
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="blue" class="bi bi-tornado" viewBox="0 0 16 16">
@@ -243,10 +260,11 @@ it("15 - Bootstrap 'tornado.svg'", function () {
 			removeClass: true,
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("16 - Change color from 'black' to 'currentColor'.", function () {
-	doTest(
+	const actual = runPlugin(
 		'16',
 		`
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" version="1.1" color="black" fill="black" stroke="black">
@@ -259,10 +277,11 @@ it("16 - Change color from 'black' to 'currentColor'.", function () {
 			setColorIssue: 'fail',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("17 - Change all colors to 'currentColor'.", function () {
-	doTest(
+	const actual = runPlugin(
 		'17',
 		`
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" version="1.1" color="red" fill="black" stroke="green">
@@ -276,10 +295,11 @@ it("17 - Change all colors to 'currentColor'.", function () {
 			setColorIssue: 'ignore',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("18 - Change all colors to 'currentColor' - also disable autocrop.", function () {
-	doTest(
+	const actual = runPlugin(
 		'18',
 		`
         <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" class="removeme1" version="1.1" color="red" fill="black" stroke="green">
@@ -295,10 +315,11 @@ it("18 - Change all colors to 'currentColor' - also disable autocrop.", function
 			setColorIssue: 'ignore',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it("19 - Fix color on 'icon-43-note-remove.svg'", function () {
-	doTest(
+	const actual = runPlugin(
 		'19',
 		`
         <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -321,10 +342,11 @@ it("19 - Fix color on 'icon-43-note-remove.svg'", function () {
 			setColorIssue: 'fail',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('20 - Set color should set fill.', function () {
-	doTest(
+	const actual = runPlugin(
 		'20',
 		`
         <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 20 18">
@@ -338,10 +360,11 @@ it('20 - Set color should set fill.', function () {
 			setColorIssue: 'fail',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
 it('21 - Delete redundant: color="currentColor" overflow="visible". Also set fill="currentColor".', function () {
-	doTest(
+	const actual = runPlugin(
 		'21',
 		`
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -355,9 +378,10 @@ it('21 - Delete redundant: color="currentColor" overflow="visible". Also set fil
 			setColorIssue: 'fail',
 		},
 	);
+	expect(actual).toMatchSnapshot();
 });
 
-function doTest(caseId: string, input: string, params: AutocropParams = {}) {
+function runPlugin(caseId: string, input: string, params: AutocropParams = {}): string {
 	const plugin: Plugin<AutocropParams> = {
 		...autocrop,
 		params: params,
@@ -372,5 +396,5 @@ function doTest(caseId: string, input: string, params: AutocropParams = {}) {
 	if (params.debug) {
 		console.debug(`[Run 1] ${runPath}\n[Input] ${input.trim()}\n[Output] ${normalized.trim()}`);
 	}
-	expect(normalized).toMatchSnapshot();
+	return normalized;
 }

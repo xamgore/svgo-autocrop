@@ -1,4 +1,4 @@
-import type {PluginInfo, XastRoot} from 'svgo';
+import type { PluginInfo, XastRoot } from 'svgo';
 
 import Ensure from './Ensure';
 import SvgRenderer from './ImageUtils';

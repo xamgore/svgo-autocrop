@@ -21,4 +21,4 @@ export default class SvgTranslateError extends Error {
 	static silentRollback(message: string) {
 		return new SvgTranslateError(message, 'silentRollback');
 	}
-};
+}

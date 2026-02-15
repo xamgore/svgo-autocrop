@@ -1,4 +1,5 @@
 import { SVGPathData } from 'svg-pathdata';
+
 import Ensure from './Ensure';
 import SvgTranslateError from './SvgTranslateError';
 
@@ -504,4 +505,4 @@ export default class SvgTranslate {
 		}
 		this.#ensureNoChildren(node);
 	}
-};
+}

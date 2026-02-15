@@ -85,11 +85,7 @@ declare module 'svgo' {
 		active?: boolean;
 		description?: string;
 		params?: Params;
-		fn: (
-			ast: XastRoot,
-			params: Params,
-			info: PluginInfo,
-		) => Visitor | XastRoot | null | void;
+		fn: (ast: XastRoot, params: Params, info: PluginInfo) => Visitor | XastRoot | null | void;
 	}
 
 	export interface OptimizeOptions {
@@ -122,8 +118,5 @@ declare module 'svgo/lib/parser' {
 declare module 'svgo/lib/stringifier' {
 	import type { XastRoot } from 'svgo';
 
-	export function stringifySvg(
-		ast: XastRoot,
-		config?: Record<string, unknown>,
-	): { data: string };
+	export function stringifySvg(ast: XastRoot, config?: Record<string, unknown>): { data: string };
 }

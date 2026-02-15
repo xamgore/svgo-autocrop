@@ -1,6 +1,7 @@
+import type { XastRoot } from 'svgo';
+
 import { parseSvg } from 'svgo/lib/parser';
 import { stringifySvg } from 'svgo/lib/stringifier';
-import type { XastRoot } from 'svgo';
 
 export default class SvgUtils {
 	/**
@@ -19,4 +20,4 @@ export default class SvgUtils {
 	static js2svg(ast: XastRoot): string {
 		return stringifySvg(ast).data;
 	}
-};
+}

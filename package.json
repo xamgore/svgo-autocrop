@@ -24,8 +24,8 @@
 	"scripts": {
 		"fmt": "oxfmt .",
 		"fmt:check": "oxfmt --check .",
-		"lint": "tsc --noEmit && oxlint . --jest-plugin --node-plugin",
-		"lint:fix": "oxlint . --jest-plugin --node-plugin --fix",
+		"lint": "tsc --noEmit && oxlint .",
+		"lint:fix": "oxlint . --fix",
 		"report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
 		"test": "jest",
 		"test:watch": "jest --watch"

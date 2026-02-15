@@ -1,5 +1,6 @@
-import fs from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
+import fs from 'node:fs';
+
 import Ensure from './Ensure';
 
 export default class ImageUtils {
@@ -95,4 +96,4 @@ export default class ImageUtils {
 		}
 		return result;
 	}
-};
+}
