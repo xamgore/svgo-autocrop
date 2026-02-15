@@ -25,6 +25,7 @@
 		"fmt:check": "oxfmt --check .",
 		"lint": "oxlint . --jest-plugin --node-plugin",
 		"lint:fix": "oxlint . --jest-plugin --node-plugin --fix",
+		"report:visual": "node scripts/generate-visual-report.js",
 		"test": "jest --maxWorkers=4",
 		"testfile": "node node_modules/jest/bin/jest.js -i",
 		"testname": "node node_modules/jest/bin/jest.js -t"
