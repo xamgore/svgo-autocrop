@@ -31,9 +31,10 @@ type OptimizeOptionsLike = {
 function main() {
 	const cases = collectCasesFromTests().map(
 		(item): VisualReportCaseWithOutput => ({
-		...item,
-		outputSvg:
-			item.outputSvg || '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
+			...item,
+			outputSvg:
+				item.outputSvg ||
+				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
 		}),
 	);
 	const html = renderHtml(cases);

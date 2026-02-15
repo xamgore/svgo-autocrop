@@ -1,10 +1,10 @@
-import type { PluginInfo, XastRoot, XastChild } from 'svgo';
+import type { PluginInfo, XastRoot, XastElement } from 'svgo';
 
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
 import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
-import { js2svg, svg2js } from './SvgUtils';
+import { js2svg } from './SvgUtils';
 
 type Viewbox = {
 	x: number;
@@ -60,6 +60,7 @@ export function plugin(ast: XastRoot, params: AutocropParams = {}, info: PluginI
 		attribs.width = '' + viewbox.width;
 		attribs.height = '' + viewbox.height;
 		let svg = js2svg(ast);
+		let astSnapshot = structuredClone(ast);
 
 		// Only render the SVG on the first call.
 		// We still do everything else (like translate) because after the <svg>
@@ -78,8 +79,8 @@ export function plugin(ast: XastRoot, params: AutocropParams = {}, info: PluginI
 
 		// Attempt to translate back to (0,0) if not already (0,0)
 		if (!translate(ast, params, viewboxNew, multipassCount)) {
-			// Rollback the ast by recreating the js representation. This has to be done because the ast may currently be in an inconsistent/only partially modified state.
-			ast.children = svg2js(svg).children;
+			// Roll back ast because it may currently be in an inconsistent/partially modified state.
+			ast.children = astSnapshot.children;
 			attribs = getSvgAttribs(ast);
 		}
 
@@ -227,7 +228,7 @@ function getSvgAttribs(ast: XastRoot): Record<string, string> {
 		throw new Error('AST contains no nodes');
 	}
 	let index = 0;
-	let svg: XastChild | undefined;
+	let svg: XastElement | undefined;
 	do {
 		let node = nodes[index];
 		if (node.type === 'element' && node.name === 'svg') {

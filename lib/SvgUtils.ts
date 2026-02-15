@@ -1,7 +1,8 @@
-import type { XastRoot } from 'svgo';
+import { optimize, type CustomPlugin, type XastRoot } from 'svgo';
 
-import { parseSvg } from 'svgo/lib/parser';
-import { stringifySvg } from 'svgo/lib/stringifier';
+function cloneAst(ast: XastRoot): XastRoot {
+	return structuredClone(ast);
+}
 
 /**
  * Parse the SVG/XML string provided - and return the javascript in-memory representation.
@@ -10,12 +11,37 @@ import { stringifySvg } from 'svgo/lib/stringifier';
  * @param path Optional SVG path - only used if reporting error.
  */
 export function svg2js(str: string, path?: string): XastRoot {
-	return parseSvg(str, path);
+	let ast: XastRoot | null = null;
+	const captureAstPlugin: CustomPlugin = {
+		name: 'capture-ast',
+		fn: (root) => {
+			ast = cloneAst(root);
+		},
+	};
+	optimize(str, {
+		path: path,
+		multipass: false,
+		plugins: [captureAstPlugin],
+	});
+	if (!ast) {
+		throw new Error('Failed to parse SVG.');
+	}
+	return ast;
 }
 
 /**
  * Format the AST/Javascript in-memory representation back to the SVG/XML string.
  */
 export function js2svg(ast: XastRoot): string {
-	return stringifySvg(ast).data;
+	const astCopy = cloneAst(ast);
+	const injectAstPlugin: CustomPlugin = {
+		name: 'inject-ast',
+		fn: (root) => {
+			root.children = astCopy.children;
+		},
+	};
+	return optimize('<svg xmlns="http://www.w3.org/2000/svg"></svg>', {
+		multipass: false,
+		plugins: [injectAstPlugin],
+	}).data;
 }

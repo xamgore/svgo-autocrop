@@ -8,7 +8,7 @@
 
 import { EOL } from 'node:os';
 import * as PATH from 'node:path';
-import { optimize, type Plugin } from 'svgo';
+import { optimize, type CustomPlugin } from 'svgo';
 
 import type { AutocropParams } from '../lib/AutocropUtils';
 import autocrop = require('../index');
@@ -382,7 +382,7 @@ it('21 - Delete redundant: color="currentColor" overflow="visible". Also set fil
 });
 
 function runPlugin(caseId: string, input: string, params: AutocropParams = {}): string {
-	const plugin: Plugin<AutocropParams> = {
+	const plugin: CustomPlugin<AutocropParams> = {
 		...autocrop,
 		params: params,
 	};

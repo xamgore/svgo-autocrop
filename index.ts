@@ -1,15 +1,10 @@
-import type { Plugin } from 'svgo';
+import type { CustomPlugin } from 'svgo';
 
 import type { AutocropParams } from './lib/AutocropUtils';
-
 import { plugin } from './lib/AutocropUtils';
 
-const autocrop: Plugin<AutocropParams> = {
-	type: 'visitor',
+const autocrop: CustomPlugin<AutocropParams> = {
 	name: 'autocrop',
-	active: true,
-	description:
-		'reduce viewBox to minimum possible size so no wasted transparent space around svg',
 
 	/**
 	 * Reduce viewBox to minimum possible size so no wasted transparent space around svg.
@@ -25,9 +20,8 @@ const autocrop: Plugin<AutocropParams> = {
 	 *
 	 * @author Glennos
 	 */
-	fn: (ast, params, info) => {
+	fn: (ast, params = {}, info) => {
 		plugin(ast, params, info);
-		return null;
 	},
 };
 

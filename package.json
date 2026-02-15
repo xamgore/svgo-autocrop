@@ -32,9 +32,9 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@resvg/resvg-js": "^2.6.2",
+		"@resvg/resvg-js": "2.6.2",
 		"svg-pathdata": "8.0.0",
-		"svgo": "^2.8.0"
+		"svgo": "4.0.0"
 	},
 	"devDependencies": {
 		"@swc-node/register": "^1.11.1",
@@ -47,7 +47,7 @@
 		"oxfmt": "^0.32.0",
 		"oxlint": "^1.47.0",
 		"oxlint-tsgolint": "^0.13.0",
-		"typescript": "^5.9.2"
+        "typescript": "6.0.0-dev.20260215"
 	},
 	"jest": {
 		"testEnvironment": "node",
@@ -65,8 +65,25 @@
 						"type": "commonjs"
 					}
 				}
+			],
+			"^.+\\.m?js$": [
+				"@swc/jest",
+				{
+					"jsc": {
+						"target": "es2022",
+						"parser": {
+							"syntax": "ecmascript"
+						}
+					},
+					"module": {
+						"type": "commonjs"
+					}
+				}
 			]
 		},
+		"transformIgnorePatterns": [
+			"/node_modules/(?!.*svg-pathdata)"
+		],
 		"testMatch": [
 			"**/*.test.ts"
 		],
