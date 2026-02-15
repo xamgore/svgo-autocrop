@@ -1,18 +1,12 @@
+import type { XastElement, XastNode } from 'svgo';
+
 import { SVGPathData } from 'svg-pathdata';
 
 import Ensure from './Ensure';
 import SvgTranslateError from './SvgTranslateError';
 
 export default class SvgTranslate {
-	x;
-	y;
-	multipassCount;
-	removeClass;
-	removeStyle;
-	removeDeprecated;
-	setColor;
-	previousColor;
-	setColorIssue;
+	private previousColor: string | null;
 
 	/**
 	 * @removeClass If true, then delete 'class' attribute.
@@ -22,34 +16,27 @@ export default class SvgTranslate {
 	 * @setColorIssue Either undefined/'warn', 'fail', 'rollback' or 'ignore'. See "README.md#Parameters" for a full description of these values.
 	 */
 	constructor(
-		x,
-		y,
-		multipassCount = 0,
-		removeClass = false,
-		removeStyle = false,
-		removeDeprecated = false,
-		setColor = undefined,
-		setColorIssue = undefined,
+		private x: number,
+		private y: number,
+		private multipassCount = 0,
+		private removeClass = false,
+		private removeStyle = false,
+		private removeDeprecated = false,
+		private setColor: string | null = null,
+		private setColorIssue: string | null = null,
 	) {
-		this.x = x;
-		this.y = y;
-		this.multipassCount = multipassCount;
-
-		this.removeClass = removeClass;
-		this.removeStyle = removeStyle;
-		this.removeDeprecated = removeDeprecated;
-
-		this.setColor = setColor;
-		this.previousColor = null; // Used to store lowercase color previously encountered. If 'setColor' is defined and we encounter more than one color, then we fail.
-		if (!setColorIssue || setColorIssue == 'warn') {
+		// Used to store lowercase color previously encountered.
+		// If 'setColor' is defined, and we encounter more than one color, then we fail.
+		this.previousColor = null;
+		if (!setColorIssue || setColorIssue === 'warn') {
 			this.setColorIssue = null;
 		} else if (
-			setColorIssue == 'fail' ||
-			setColorIssue == 'rollback' ||
-			setColorIssue == 'ignore'
+			!(
+				setColorIssue === 'fail' ||
+				setColorIssue === 'rollback' ||
+				setColorIssue === 'ignore'
+			)
 		) {
-			this.setColorIssue = setColorIssue;
-		} else {
 			throw Ensure.unexpectedObject(
 				'Invalid "params.setColorIssue" value specified',
 				setColorIssue,
@@ -63,20 +50,20 @@ export default class SvgTranslate {
 	 * Implementation works off a whitelist of known svg elements/attributes - if anything unknown is encountered, an exception is thrown.
 	 * If an exception is thrown, the caller has to rollback the ast themselves to the original unmodified version.
 	 */
-	translate(ast) {
-		if (ast.type != 'root') {
+	translate(ast: XastNode) {
+		if (ast.type !== 'root') {
 			throw Ensure.unexpectedObject('Expected root', ast);
 		}
-		let hasSvg;
+		let hasSvg = false;
 		for (const child of ast.children) {
 			const type = child.type;
-			if (type == 'element' && child.name == 'svg') {
+			if (type === 'element' && child.name === 'svg') {
 				if (hasSvg) {
 					throw Ensure.unexpectedObject('Multiple <svg> elements found', ast);
 				}
 				hasSvg = true;
 				this.#rootSvg(child);
-			} else if (type == 'comment' || type == 'instruction' || type == 'doctype') {
+			} else if (type === 'comment' || type === 'instruction' || type === 'doctype') {
 				// Can ignore comments and instructions like <?xml ... ?>
 			} else {
 				throw Ensure.unexpectedObject('Unhandled node', child);
@@ -87,7 +74,7 @@ export default class SvgTranslate {
 		}
 	}
 
-	#rootSvg(svg) {
+	#rootSvg(svg: XastElement) {
 		this.#svg(svg);
 
 		// Ensure color set to root <svg> if not set to any other part of the <svg>
@@ -97,129 +84,128 @@ export default class SvgTranslate {
 		}
 	}
 
-	#svg(svg) {
-		const attribs = svg.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'viewBox') {
+	#svg(svg: XastElement) {
+		const attributes = svg.attributes;
+		for (const attr in attributes) {
+			if (attr === 'viewBox') {
 				// TODO maybe do something?
 			} else if (
-				attribName == 'width' ||
-				attribName == 'height' ||
-				attribName == 'xmlns' ||
-				attribName == 'enable-background'
+				attr === 'width' ||
+				attr === 'height' ||
+				attr === 'xmlns' ||
+				attr === 'enable-background'
 			) {
 				// Ignore
-			} else if (attribName == 'version' || attribName == 'baseProfile') {
+			} else if (attr === 'version' || attr === 'baseProfile') {
 				if (this.removeDeprecated) {
 					// Remove deprecated if requested
-					delete attribs[attribName];
+					delete attributes[attr];
 				}
-			} else if (attribName == 'x' || attribName == 'y') {
-				let str = attribs[attribName];
-				if (!str || str == '0' || str == '0px') {
-					delete attribs[attribName]; // Can just remove this - completely redundant.
+			} else if (attr === 'x' || attr === 'y') {
+				let str = attributes[attr];
+				if (!str || str === '0' || str === '0px') {
+					delete attributes[attr]; // Can just remove this - completely redundant.
 				} else {
-					this.#unhandledAttribute(svg, attribs, attribName);
+					this.#unhandledAttribute(svg, attributes, attr);
 				}
 			} else {
-				this.#unhandledAttribute(svg, attribs, attribName);
+				this.#unhandledAttribute(svg, attributes, attr);
 			}
 		}
 		this.#handleChildren(svg);
 	}
 
-	#handleChildren(node) {
+	#handleChildren(node: XastElement) {
 		for (const child of node.children) {
 			const type = child.type;
-			if (type == 'element') {
+			if (type === 'element') {
 				const name = child.name.toLowerCase();
-				if (name == 'g') {
+				if (name === 'g') {
 					this.#g(child);
-				} else if (name == 'path') {
+				} else if (name === 'path') {
 					this.#path(child);
-				} else if (name == 'rect') {
+				} else if (name === 'rect') {
 					this.#rect(child);
-				} else if (name == 'line') {
+				} else if (name === 'line') {
 					this.#line(child);
-				} else if (name == 'polyline') {
+				} else if (name === 'polyline') {
 					this.#polyline(child);
-				} else if (name == 'polygon') {
+				} else if (name === 'polygon') {
 					this.#polygon(child);
-				} else if (name == 'circle') {
+				} else if (name === 'circle') {
 					this.#circle(child);
-				} else if (name == 'ellipse') {
+				} else if (name === 'ellipse') {
 					this.#ellipse(child);
-				} else if (name == 'defs') {
+				} else if (name === 'defs') {
 					this.#defs(child);
-				} else if (name == 'title' || name == 'desc') {
+				} else if (name === 'title' || name === 'desc') {
 					// Can just ignore title/description
 				} else {
 					throw Ensure.unexpectedObject('Unhandled element', child);
 				}
-			} else if (type == 'comment') {
+			} else if (type === 'comment') {
 				// Can ignore comments
 			} else {
-				throw Ensure.unexpectedObject('Unhandled node type "' + type + '"', child);
+				throw Ensure.unexpectedObject(`Unhandled node type "${type}"`, child);
 			}
 		}
 	}
 
-	#ensureNoChildren(node) {
+	#ensureNoChildren(node: XastElement) {
 		let children = node.children;
 		if (children && children.length > 0) {
 			throw Ensure.unexpectedObject('Unexpected/unhandled children', node);
 		}
 	}
 
-	#unhandledAttribute(node, attribs, attribName) {
-		if (attribName) {
+	#unhandledAttribute(node: XastElement, attributes: Record<string, string>, attr: string) {
+		if (attr) {
 			// For full list, see: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute
 			if (
-				attribName == 'fill' ||
-				attribName == 'stroke' ||
-				attribName == 'color' ||
-				attribName == 'stop-color' ||
-				attribName == 'flood-color' ||
-				attribName == 'lighting-color'
+				attr === 'fill' ||
+				attr === 'stroke' ||
+				attr === 'color' ||
+				attr === 'stop-color' ||
+				attr === 'flood-color' ||
+				attr === 'lighting-color'
 			) {
-				this.#translateColor(node, attribs, attribName);
+				this.#translateColor(node, attributes, attr);
 				return;
-			} else if (attribName == 'class') {
+			} else if (attr === 'class') {
 				if (this.removeClass) {
-					delete attribs[attribName];
+					delete attributes[attr];
 				}
 				return;
-			} else if (attribName == 'style' || attribName == 'font-family') {
+			} else if (attr === 'style' || attr === 'font-family') {
 				if (this.removeStyle) {
-					delete attribs[attribName];
+					delete attributes[attr];
 				}
 				return;
-			} else if (attribName == 'overflow') {
+			} else if (attr === 'overflow') {
 				// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/overflow
 				if (this.removeStyle) {
-					let value = attribs[attribName];
-					if (!value || value == 'visible') {
+					let value = attributes[attr];
+					if (!value || value === 'visible') {
 						// 'overflow=visible' is the default - so just remove this.
-						delete attribs[attribName];
+						delete attributes[attr];
 					}
 				}
 				return;
 			} else if (
-				attribName == 'enable-background' ||
-				attribName == 'data-name' ||
-				attribName == 'xml:space' ||
-				attribName == 'xmlns:sketch' ||
-				attribName.startsWith('sketch:')
+				attr === 'enable-background' ||
+				attr === 'data-name' ||
+				attr === 'xml:space' ||
+				attr === 'xmlns:sketch' ||
+				attr.startsWith('sketch:')
 			) {
 				// Note: most common 'sketch:' attribute is 'sketch:type'.
 				if (this.removeDeprecated) {
 					// Remove deprecated/redundant if requested
-					delete attribs[attribName];
+					delete attributes[attr];
 				}
 				return;
-			} else if (attribName == 'transform') {
-				let multipassCount = this.multipassCount;
-				if (multipassCount === 0) {
+			} else if (attr === 'transform') {
+				if (this.multipassCount === 0) {
 					throw SvgTranslateError.silentRollback(
 						"Svgo's 'convertTransform' plugin will often remove transforms. During the next run potentially no transform attribute will be present.",
 					);
@@ -228,66 +214,63 @@ export default class SvgTranslate {
 						"Svgo's 'convertTransform' is either not enabled or failed to remove <" +
 							node.name +
 							" transform='" +
-							attribs[attribName] +
+							attributes[attr] +
 							"'> on the first pass.\n" +
 							"If this was a simple transform, consider confirming the svgo default plugins or at least the 'convertTransform' plugin are in your svgo configuration file.",
 						node,
 					);
 				}
 			} else if (
-				attribName == 'id' ||
-				attribName == 'opacity' ||
-				attribName == 'display' ||
-				attribName.startsWith('fill-') ||
-				attribName.startsWith('stroke-') ||
-				attribName.startsWith('clip-') ||
-				attribName.startsWith('xmlns:') ||
-				attribName.startsWith('xml:')
+				attr === 'id' ||
+				attr === 'opacity' ||
+				attr === 'display' ||
+				attr.startsWith('fill-') ||
+				attr.startsWith('stroke-') ||
+				attr.startsWith('clip-') ||
+				attr.startsWith('xmlns:') ||
+				attr.startsWith('xml:')
 			) {
 				return; // Can somewhat safely ignore these.
 			}
 		}
-		throw Ensure.unexpectedObject(
-			'Unhandled <' + node.name + ' ' + attribName + '> attribute',
-			node,
-		);
+		throw Ensure.unexpectedObject(`Unhandled <${node.name} ${attr}> attribute`, node);
 	}
 
-	#translateX(node, attribs, attribName) {
+	#translateX(node: XastElement, attributes: Record<string, string>, attr: string) {
 		let x = this.x;
 		if (x !== 0) {
-			let num = this.#getAttribNumber(node, attribs, attribName);
-			attribs[attribName] = '' + (num + x);
+			let num = this.#getNumberAttr(node, attributes, attr);
+			attributes[attr] = '' + (num + x);
 		}
 	}
 
-	#translateY(node, attribs, attribName) {
+	#translateY(node: XastElement, attributes: Record<string, string>, attr: string) {
 		let y = this.y;
 		if (y !== 0) {
-			let num = this.#getAttribNumber(node, attribs, attribName);
-			attribs[attribName] = '' + (num + y);
+			let num = this.#getNumberAttr(node, attributes, attr);
+			attributes[attr] = '' + (num + y);
 		}
 	}
 
-	#translateColor(node, attribs, attribName) {
+	#translateColor(node: XastElement, attributes: Record<string, string>, attr: string) {
 		let setColor = this.setColor;
 		if (!setColor) {
 			return;
 		}
 
 		// Get value
-		let value = attribs[attribName];
+		let value = attributes[attr];
 		if (!value || (value = value.trim()).length <= 0) {
-			delete attribs[attribName];
+			delete attributes[attr];
 			return;
 		}
 		value = value.toLowerCase();
 
 		// Set color
-		if (value != 'none') {
+		if (value !== 'none') {
 			// 'color="currentColor"' is always redundant - setting color to the 'currentColor' has no effect given the previous color was already 'currentColor'.
-			if (attribName == 'color' && setColor == 'currentColor') {
-				delete attribs[attribName];
+			if (attr === 'color' && setColor === 'currentColor') {
+				delete attributes[attr];
 				return;
 			}
 
@@ -295,23 +278,14 @@ export default class SvgTranslate {
 			let previousColor = this.previousColor;
 			if (!previousColor) {
 				this.previousColor = value;
-			} else if (previousColor != value) {
-				// Note: case insensitive comparison.
+			} else if (previousColor !== value) {
+				// Note: case-insensitive comparison.
 				let setColorIssue = this.setColorIssue;
-				if (setColorIssue != 'ignore') {
-					let message =
-						'Expected single color/monotone <svg>, however multiple colors encountered in <svg> - previous color "' +
-						previousColor +
-						'", but just encountered <' +
-						node.name +
-						' ' +
-						attribName +
-						'="' +
-						attribs[attribName] +
-						'"> attribute with different color';
-					if (!setColorIssue || setColorIssue == 'warn') {
+				if (setColorIssue !== 'ignore') {
+					let message = `Expected single color/monotone <svg>, however multiple colors encountered in <svg> - previous color "${previousColor}", but just encountered <${node.name} ${attr}="${attributes[attr]}"> attribute with different color`;
+					if (!setColorIssue || setColorIssue === 'warn') {
 						console.warn(message);
-					} else if (setColorIssue == 'rollback') {
+					} else if (setColorIssue === 'rollback') {
 						throw Ensure.unexpectedObject(message, node);
 					} else {
 						throw SvgTranslateError.fail(message);
@@ -320,187 +294,164 @@ export default class SvgTranslate {
 			}
 
 			// Set color
-			attribs[attribName] = setColor;
+			attributes[attr] = setColor;
 		}
 	}
 
-	#getAttribString(node, attribs, attribName) {
-		let str = attribs[attribName];
-		if (typeof str != 'string') {
+	#getAttribString(node: XastElement, attributes: Record<string, string>, attr: string) {
+		let str = attributes[attr];
+		if (typeof str !== 'string') {
 			throw Ensure.unexpectedObject(
-				'Invalid <' + node.name + ' ' + attribName + '> attribute - expected string',
+				`Invalid <${node.name} ${attr}> attribute - expected string`,
 				node,
 			);
 		} else if (str.length <= 0) {
 			throw Ensure.unexpectedObject(
-				'Invalid <' +
-					node.name +
-					' ' +
-					attribName +
-					'> attribute - empty string specified for attribute',
+				`Invalid <${node.name} ${attr}> attribute - empty string specified for attribute`,
 				node,
 			);
 		}
 		return str;
 	}
 
-	#getAttribNumber(node, attribs, attribName) {
-		let str = this.#getAttribString(node, attribs, attribName);
+	#getNumberAttr(node: XastElement, attributes: Record<string, string>, attr: string) {
+		let str = this.#getAttribString(node, attributes, attr);
 		let num = Number(str);
 		if (!isFinite(num)) {
 			throw Ensure.unexpectedObject(
-				'Invalid <' +
-					node.name +
-					' ' +
-					attribName +
-					'="' +
-					str +
-					'"> attribute - invalid number',
+				`Invalid <${node.name} ${attr}="${str}"> attribute - invalid number`,
 				node,
 			);
 		}
 		return num;
 	}
 
-	#defs(node) {
+	#defs(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/defs
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			this.#unhandledAttribute(node, attribs, attribName);
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			this.#unhandledAttribute(node, attributes, attr);
 		}
 		this.#ensureNoChildren(node);
 	}
 
-	#g(node) {
+	#g(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/g
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			this.#unhandledAttribute(node, attribs, attribName);
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			this.#unhandledAttribute(node, attributes, attr);
 		}
 		this.#handleChildren(node);
 	}
 
-	#path(node) {
+	#path(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#path
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'd') {
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			if (attr === 'd') {
 				let x = this.x;
 				let y = this.y;
 				if (x !== 0 || y !== 0) {
-					let data = attribs.d;
+					let data = attributes.d;
 					let dataNew = new SVGPathData(data)
 						.toAbs()
 						.translate(x, y)
 						.round(1e14)
 						.encode();
-					attribs.d = dataNew;
+					attributes.d = dataNew;
 				}
 			} else {
-				this.#unhandledAttribute(node, attribs, attribName);
+				this.#unhandledAttribute(node, attributes, attr);
 			}
 		}
 		this.#ensureNoChildren(node);
 	}
 
-	#rect(node) {
+	#rect(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#rectangle
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'x') {
-				this.#translateX(node, attribs, attribName);
-			} else if (attribName == 'y') {
-				this.#translateY(node, attribs, attribName);
-			} else if (
-				attribName == 'width' ||
-				attribName == 'height' ||
-				attribName == 'rx' ||
-				attribName == 'ry'
-			) {
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			if (attr === 'x') {
+				this.#translateX(node, attributes, attr);
+			} else if (attr === 'y') {
+				this.#translateY(node, attributes, attr);
+			} else if (attr === 'width' || attr === 'height' || attr === 'rx' || attr === 'ry') {
 				// Can safely ignore these
 			} else {
-				this.#unhandledAttribute(node, attribs, attribName);
+				this.#unhandledAttribute(node, attributes, attr);
 			}
 		}
 		this.#ensureNoChildren(node);
 	}
 
-	#line(node) {
+	#line(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#line
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'x1' || attribName == 'x2') {
-				this.#translateX(node, attribs, attribName);
-			} else if (attribName == 'y1' || attribName == 'y2') {
-				this.#translateY(node, attribs, attribName);
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			if (attr === 'x1' || attr === 'x2') {
+				this.#translateX(node, attributes, attr);
+			} else if (attr === 'y1' || attr === 'y2') {
+				this.#translateY(node, attributes, attr);
 			} else {
-				this.#unhandledAttribute(node, attribs, attribName);
+				this.#unhandledAttribute(node, attributes, attr);
 			}
 		}
 		this.#ensureNoChildren(node);
 	}
 
-	#polyline(node) {
+	#polyline(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#polyline
 		this.#_silentRollbackIfFirstPass(node);
 	}
 
-	#polygon(node) {
+	#polygon(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#polygon
 		this.#_silentRollbackIfFirstPass(node);
 	}
 
-	#_silentRollbackIfFirstPass(node) {
+	#_silentRollbackIfFirstPass(node: XastElement) {
 		let multipassCount = this.multipassCount;
 		if (multipassCount === 0) {
 			throw SvgTranslateError.silentRollback(
 				"Svgo's 'convertShapeToPath' plugin will convert this to <path d> - which we can translate on next call",
 			);
 		} else {
-			throw Ensure.unexpectedObject(
-				"Svgo's 'convertShapeToPath' was meant to convert <" +
-					node.name +
-					'> to <path d> on the first pass,' +
-					" however it's multipassCount=" +
-					multipassCount +
-					' and this <' +
-					node.name +
-					"> element hasn't been replaced.\n" +
-					"Please confirm svgo default plugins or at least the 'convertShapeToPath' plugin are in your svgo configuration file.",
-				node,
-			);
+			const err =
+				`Svgo's 'convertShapeToPath' was meant to convert <${node.name}> to <path d> on the first pass, however it's multipassCount=${multipassCount} and this <${node.name}> element hasn't been replaced.\n` +
+				`Please confirm svgo default plugins or at least the 'convertShapeToPath' plugin are in your svgo configuration file.`;
+			throw Ensure.unexpectedObject(err, node);
 		}
 	}
 
-	#circle(node) {
+	#circle(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#circle
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'cx') {
-				this.#translateX(node, attribs, attribName);
-			} else if (attribName == 'cy') {
-				this.#translateY(node, attribs, attribName);
-			} else if (attribName == 'r') {
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			if (attr === 'cx') {
+				this.#translateX(node, attributes, attr);
+			} else if (attr === 'cy') {
+				this.#translateY(node, attributes, attr);
+			} else if (attr === 'r') {
 				// Can safely ignore these
 			} else {
-				this.#unhandledAttribute(node, attribs, attribName);
+				this.#unhandledAttribute(node, attributes, attr);
 			}
 		}
 		this.#ensureNoChildren(node);
 	}
 
-	#ellipse(node) {
+	#ellipse(node: XastElement) {
 		// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Shapes#ellipse
-		const attribs = node.attributes;
-		for (const attribName in attribs) {
-			if (attribName == 'cx') {
-				this.#translateX(node, attribs, attribName);
-			} else if (attribName == 'cy') {
-				this.#translateY(node, attribs, attribName);
-			} else if (attribName == 'rx' || attribName == 'ry') {
+		const attributes = node.attributes;
+		for (const attr in attributes) {
+			if (attr === 'cx') {
+				this.#translateX(node, attributes, attr);
+			} else if (attr === 'cy') {
+				this.#translateY(node, attributes, attr);
+			} else if (attr === 'rx' || attr === 'ry') {
 				// Can safely ignore these
 			} else {
-				this.#unhandledAttribute(node, attribs, attribName);
+				this.#unhandledAttribute(node, attributes, attr);
 			}
 		}
 		this.#ensureNoChildren(node);

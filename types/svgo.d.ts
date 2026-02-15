@@ -55,6 +55,8 @@ declare module 'svgo' {
 
 	export type XastParent = XastRoot | XastElement;
 
+	export type XastNode = XastRoot | XastChild;
+
 	export interface VisitorCallbacks<TNode = unknown, TParent = unknown> {
 		enter?: (node: TNode, parent: TParent) => void | symbol;
 		exit?: (node: TNode, parent: TParent) => void;

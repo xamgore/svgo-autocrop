@@ -2,7 +2,7 @@ import type { Plugin } from 'svgo';
 
 import type { AutocropParams } from './lib/AutocropUtils';
 
-import AutocropUtils from './lib/AutocropUtils';
+import { plugin } from './lib/AutocropUtils';
 
 const autocrop: Plugin<AutocropParams> = {
 	type: 'visitor',
@@ -26,7 +26,7 @@ const autocrop: Plugin<AutocropParams> = {
 	 * @author Glennos
 	 */
 	fn: (ast, params, info) => {
-		AutocropUtils.plugin(ast, params, info);
+		plugin(ast, params, info);
 		return null;
 	},
 };

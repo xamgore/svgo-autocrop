@@ -24,8 +24,8 @@
 	"scripts": {
 		"fmt": "oxfmt .",
 		"fmt:check": "oxfmt --check .",
-		"lint": "tsc --noEmit && oxlint .",
-		"lint:fix": "oxlint . --fix",
+		"lint": "oxlint --type-aware --type-check --format=stylish .",
+		"lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
 		"report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
 		"test": "jest",
 		"test:watch": "jest --watch"
@@ -33,18 +33,20 @@
 	"license": "MIT",
 	"dependencies": {
 		"@resvg/resvg-js": "^2.6.2",
-		"svg-pathdata": "^6.0.3",
+		"svg-pathdata": "8.0.0",
 		"svgo": "^2.8.0"
 	},
 	"devDependencies": {
+		"@swc-node/register": "^1.11.1",
 		"@swc/core": "^1.11.22",
 		"@swc/jest": "^0.2.39",
-		"@swc-node/register": "^1.11.1",
 		"@types/jest": "^30.0.0",
 		"@types/node": "^24.5.2",
+		"@typescript/native-preview": "7.0.0-dev.20260215.1",
 		"jest": "30.2.0",
 		"oxfmt": "^0.32.0",
 		"oxlint": "^1.47.0",
+		"oxlint-tsgolint": "^0.13.0",
 		"typescript": "^5.9.2"
 	},
 	"jest": {

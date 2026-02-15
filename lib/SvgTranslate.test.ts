@@ -1,12 +1,12 @@
 // noinspection RequiredAttributes
 
 import SvgTranslate from './SvgTranslate';
-import SvgUtils from './SvgUtils';
+import { svg2js, js2svg } from './SvgUtils';
 
 function translate([dx, dy]: number[], svg: string): string {
-	let ast = SvgUtils.svg2js(svg);
+	let ast = svg2js(svg);
 	new SvgTranslate(dx, dy).translate(ast);
-	return SvgUtils.js2svg(ast);
+	return js2svg(ast);
 }
 
 test.each([
