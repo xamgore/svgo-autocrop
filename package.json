@@ -37,7 +37,7 @@
 		"svgo": "^2.8.0"
 	},
 	"devDependencies": {
-		"jest": "^27.2.5",
+		"jest": "30.2.0",
 		"oxfmt": "^0.32.0",
 		"oxlint": "^1.47.0"
 	}

@@ -1,0 +1,156 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`01 - 10x10 box - viewBox - no parameters. 1`] = `
+"<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`02 - 10x10 box - viewBox - 'includeWidthAndHeightAttributes' parameter. 1`] = `
+"<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+    <rect x="0" y="0" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`03 - 10x10 box - width/height - no parameters. 1`] = `
+"<svg width="10" height="10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+    <rect x="0" y="0" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`04 - 10x10 box - width/height - 'includeWidthAndHeightAttributes' parameter. 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+    <rect x="0" y="0" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`05 - 11x11 box. 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 11">
+    <rect x="0" y="0" width="11" height="11" fill="#000"/>
+</svg>"
+`;
+
+exports[`06 - 12x12 box. 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 12">
+    <rect x="0" y="0" width="12" height="12" fill="#000"/>
+</svg>"
+`;
+
+exports[`07 - 12x12 box. 1`] = `
+"<svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="10" height="10" stroke="#000" stroke-width="1" stroke-linecap="square"/>
+</svg>"
+`;
+
+exports[`08 - '$' sign. 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 11 18">
+    <path fill="none" d="M-6 -3H18V21H-6z"/>
+    <path d="M5.8 7.9C3.53 7.31 2.8 6.7 2.8 5.75C2.8 4.66 3.81 3.9 5.5 3.9C7.28 3.9 7.94 4.75 8 6H10.21C10.14 4.28 9.09 2.7 7 2.19V0H4V2.16C2.06 2.58 0.5 3.84 0.5 5.77C0.5 8.08 2.41 9.23 5.2 9.9C7.7 10.5 8.2 11.38 8.2 12.31C8.2 13 7.71 14.1 5.5 14.1C3.44 14.1 2.63 13.18 2.52 12H0.32C0.44 14.19 2.08 15.42 4 15.83V18H7V15.85C8.95 15.48 10.5 14.35 10.5 12.3C10.5 9.46 8.07 8.49 5.8 7.9z"/>
+</svg>"
+`;
+
+exports[`09 - 10x10 box - viewBox - padding 1px. 1`] = `
+"<svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg">
+    <rect x="1" y="1" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`10 - 10x10 box - viewBox - padding 2px. 1`] = `
+"<svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`11 - 10x10 box - viewBox - padding custom 1. 1`] = `
+"<svg viewBox="0 0 16 14" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="1" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`12 - 10x10 box - viewBox - padding custom 2. 1`] = `
+"<svg viewBox="0 0 70 50" xmlns="http://www.w3.org/2000/svg">
+    <rect x="20" y="10" width="10" height="10" fill="#000"/>
+</svg>"
+`;
+
+exports[`13 - 12x12 box - with unsupported 'unsupported' attribute preventing translate back to (0,0). 1`] = `
+"<svg viewBox="4 4 12 12" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="5" width="10" height="10" stroke="#000" stroke-width="1" stroke-linecap="square" unsupported="abc"/>
+</svg>"
+`;
+
+exports[`14 - Messy 'icon-43-note-remove.svg' 1`] = `
+"<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="26" height="25" viewBox="0 0 26 25" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+<!--Generator: Sketch 3.0.3 (7891) - http://www.bohemiancoding.com/sketch-->
+    <title>icon 43 note remove</title>
+    <desc>
+        Created with Sketch.
+    </desc>
+    <defs/>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="icon-43-note-remove" sketch:type="MSArtboardGroup" fill="#157EFB">
+            <path d="M15.0218178 23L2.00086422 23C0.89581743 23 0 22.0983727 0 20.9991358L0 6L23 6L23 13.4981633C22.2304079 13.1772281 21.3859009 13 20.5 13C16.9101489 13 14 15.9101489 14 19.5C14 20.7886423 14.3749964 21.9896995 15.0218178 23L15.0218178 23L15.0218178 23zM0 5L0 2.00086422C0 0.89581743 0.90162726 0 2.00086422 0L20.9991358 0C22.1041826 0 23 0.90162726 23 2.00086422L23 5L0 5L0 5zM20.5 25C23.5375663 25 26 22.5375663 26 19.5C26 16.4624337 23.5375663 14 20.5 14C17.4624337 14 15 16.4624337 15 19.5C15 22.5375663 17.4624337 25 20.5 25L20.5 25zM17 19L17 20L24 20L24 19L17 19L17 19z" id="note-remove" sketch:type="MSShapeGroup"/>
+        </g>
+    </g>
+</svg>"
+`;
+
+exports[`15 - Bootstrap 'tornado.svg' 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" width="14" height="16" fill="blue" viewBox="0 0 14 16">
+    <path d="M0.125 2.45A0.892 0.892 0 0 1 0 2C0 1.74 0.116 1.526 0.258 1.366A1.9 1.9 0 0 1 0.771 0.977C1.158 0.767 1.684 0.592 2.291 0.452C3.514 0.17 5.18 0 7 0C8.821 0 10.486 0.17 11.709 0.452C12.316 0.592 12.842 0.766 13.229 0.977C13.422 1.083 13.603 1.21 13.742 1.366C13.883 1.526 14 1.74 14 2C14 3.011 13.65 3.612 13.366 4.102C13.326 4.172 13.286 4.239 13.25 4.305A2.55 2.55 0 0 0 12.937 5.114A2.938 2.938 0 0 0 12.926 6.005A0.5 0.5 0 0 1 13.354 6.854C13.294 6.914 13.221 6.98 13.139 7.049C13.343 8.165 13.227 9.039 12.839 9.76C12.386 10.6 11.608 11.143 10.819 11.616C10.615 11.739 10.407 11.859 10.199 11.98C8.755 12.812 7.271 13.669 6.464 15.686A0.5 0.5 0 0 1 5.716 15.912L5.715 15.911L5.713 15.91L5.709 15.907L5.699 15.89900000000001A2.142 2.142 0 0 1 5.552 15.78400000000001A4.095 4.095 0 0 1 4.373 14.128A3.786 3.786 0 0 1 4.126 12.83200000000001A0.498 0.498 0 0 1 4 12.5V12.482A0.62 0.62 0 0 1 4.008 12.403A0.728 0.728 0 0 1 4.196 12.017C4.286 11.528 4.468 11.003 4.769 10.443A0.5 0.5 0 0 1 4.842 9.525A3.29 3.29 0 0 1 5.459 9.381L5.609 9.188C5.894 8.832 6.013 8.549 6.046 8.327A0.948 0.948 0 0 0 5.924 7.708C5.675 7.253 5.109 6.805 4.311 6.278C4.118 6.151 3.913 6.02 3.702 5.884L3.583 5.808A12.307 12.307 0 0 1 2.342 5.474A0.5 0.5 0 0 1 2.057 4.767L1.827 4.587C1.117 4.01 0.463 3.32 0.125 2.45zM2.098 3.501C2.211 3.605 2.331 3.708 2.456 3.809C2.928 4.19 3.446 4.531 3.971 4.869C5.511 5.186 7.603 5.369 9.401 5.009A0.5 0.5 0 0 1 9.598 5.99C8.382 6.234 7.061 6.25 5.839 6.147C6.238 6.473 6.583 6.829 6.802 7.228C7.005 7.601 7.104 8.018 7.035 8.475C6.985 8.805 6.853 9.132 6.645 9.46C6.72 9.477 6.793 9.495 6.865 9.513L6.871 9.515C7.352 9.635 7.734 9.728 8.341 9.525A0.5 0.5 0 1 1 8.658 10.475C7.77 10.77 7.153 10.616 6.635 10.487L6.629 10.485A3.894 3.894 0 0 0 5.985 10.362C5.615 10.912 5.387 11.412 5.259 11.859C5.401 11.904 5.555 11.969 5.724 12.053A0.5 0.5 0 1 1 5.276 12.947A3.11 3.11 0 0 0 5.128 12.877C5.14 13.222 5.212 13.52 5.308 13.772C5.448 14.141 5.65 14.438 5.836 14.658C6.828 12.755 8.419 11.844 9.721 11.098C9.924 10.982 10.12 10.87 10.305 10.758C11.08 10.294 11.645 9.868 11.958 9.286C12.17 8.893 12.288 8.386 12.218 7.669A6.74 6.74 0 0 1 9 8.5A0.5 0.5 0 0 1 9 7.5A5.76 5.76 0 0 0 12.017 6.628A0.515 0.515 0 0 1 12.01 6.598C11.875 5.925 11.87 5.391 11.954 4.933C12.038 4.473 12.207 4.123 12.375 3.82L12.506 3.59C12.571 3.478 12.632 3.37 12.688 3.263C12.398 3.37 12.068 3.465 11.708 3.548C10.487 3.83 8.822 4 7 4C5.179 4 3.514 3.83 2.291 3.548C2.226 3.533 2.161 3.518 2.098 3.501zM12.964 2A1.12 1.12 0 0 0 12.75 1.855C12.478 1.707 12.053 1.558 11.484 1.427C10.354 1.166 8.769 1 7 1C5.231 1 3.646 1.166 2.516 1.427C1.947 1.557 1.522 1.707 1.25 1.855A1.12 1.12 0 0 0 1.036 2C1.076 2.038 1.145 2.087 1.25 2.145C1.522 2.293 1.947 2.442 2.516 2.573C3.646 2.834 5.231 3 7 3C8.769 3 10.354 2.834 11.484 2.573C12.053 2.443 12.478 2.293 12.75 2.145A1.12 1.12 0 0 0 12.964 2z"/>
+</svg>"
+`;
+
+exports[`16 - Change color from 'black' to 'currentColor'. 1`] = `
+"<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg" version="1.1" fill="currentColor" stroke="currentColor" viewBox="0 0 100 100">
+    <line x1="10" x2="90" y1="10" y2="10" stroke="currentColor" stroke-width="20" stroke-linecap="butt" fill="currentColor"/>
+    <line x1="10" x2="90" y1="50" y2="50" stroke="currentColor" stroke-width="20" stroke-linecap="square"/>
+    <line x1="10" x2="90" y1="90" y2="90" stroke="currentColor" stroke-width="20" stroke-linecap="round" stop-color="currentColor" flood-color="currentColor" lighting-color="currentColor"/>
+</svg>"
+`;
+
+exports[`17 - Change all colors to 'currentColor'. 1`] = `
+"<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="currentColor" viewBox="0 0 100 100">
+    <line x1="10" x2="90" y1="10" y2="10" stroke="currentColor" stroke-width="20" stroke-linecap="butt" fill="currentColor"/>
+    <line x1="10" x2="90" y1="50" y2="50" stroke="currentColor" stroke-width="20" stroke-linecap="square"/>
+    <line x1="10" x2="90" y1="90" y2="90" stroke="currentColor" stroke-width="20" stroke-linecap="square" stop-color="currentColor" flood-color="currentColor" lighting-color="currentColor"/>
+</svg>"
+`;
+
+exports[`18 - Change all colors to 'currentColor' - also disable autocrop. 1`] = `
+"<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg" fill="currentColor" stroke="currentColor" viewBox="0 0 200 200">
+    <line x1="40" x2="120" y1="20" y2="20" stroke="currentColor" stroke-width="20" stroke-linecap="butt" fill="currentColor"/>
+    <line x1="40" x2="120" y1="60" y2="60" stroke="currentColor" stroke-width="20" stroke-linecap="square"/>
+    <line x1="40" x2="120" y1="100" y2="100" stroke="currentColor" stroke-width="20" stroke-linecap="square" stop-color="currentColor" flood-color="currentColor" lighting-color="currentColor"/>
+</svg>"
+`;
+
+exports[`19 - Fix color on 'icon-43-note-remove.svg' 1`] = `
+"<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 26 25" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!--Generator: Sketch 3.0.3 (7891) - http://www.bohemiancoding.com/sketch-->
+    <title>icon 43 note remove</title>
+    <desc>
+        Created with Sketch.
+    </desc>
+    <defs/>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="icon-43-note-remove" fill="blue">
+            <path d="M15.0218178 23L2.00086422 23C0.89581743 23 0 22.0983727 0 20.9991358L0 6L23 6L23 13.4981633C22.2304079 13.1772281 21.3859009 13 20.5 13C16.9101489 13 14 15.9101489 14 19.5C14 20.7886423 14.3749964 21.9896995 15.0218178 23L15.0218178 23L15.0218178 23zM0 5L0 2.00086422C0 0.89581743 0.90162726 0 2.00086422 0L20.9991358 0C22.1041826 0 23 0.90162726 23 2.00086422L23 5L0 5L0 5zM20.5 25C23.5375663 25 26 22.5375663 26 19.5C26 16.4624337 23.5375663 14 20.5 14C17.4624337 14 15 16.4624337 15 19.5C15 22.5375663 17.4624337 25 20.5 25L20.5 25zM17 19L17 20L24 20L24 19L17 19L17 19z" id="note-remove"/>
+        </g>
+    </g>
+</svg>"
+`;
+
+exports[`20 - Set color should set fill. 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 18" fill="currentColor">
+    <path d="m19.799 4.165-2.375-1.83a1.997 1.997 0 0 0-.521-.237A2.035 2.035 0 0 0 16.336 2H9.5l.801 5h6.035c.164 0 .369-.037.566-.098s.387-.145.521-.236l2.375-1.832c.135-.091.202-.212.202-.334s-.067-.243-.201-.335zM8.5 0h-1a.5.5 0 0 0-.5.5V4H3.664c-.166 0-.37.037-.567.099-.198.06-.387.143-.521.236L.201 6.165C.066 6.256 0 6.378 0 6.5c0 .121.066.242.201.335l2.375 1.832c.134.091.323.175.521.235.197.061.401.098.567.098H7v8.5a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5V.5a.5.5 0 0 0-.5-.5z"/>
+</svg>"
+`;
+
+exports[`21 - Delete redundant: color="currentColor" overflow="visible". Also set fill="currentColor". 1`] = `
+"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 0c-1.775 0-3.454.404-4.969 1.094-.008.004-.022-.004-.031 0a1.006 1.006 0 0 0-.219 0c-1.78.203-3.29.467-4.437.812-.574.173-1.047.371-1.469.657C.453 2.848 0 3.33 0 4c0 .477.235.88.5 1.156.265.276.563.485.906.657.078.038.168.088.25.125A11.931 11.931 0 0 0 0 12c0 6.636 5.364 12 12 12s12-5.364 12-12c0-2.217-.611-4.282-1.656-6.063.082-.036.172-.086.25-.125.343-.17.641-.38.906-.656.265-.275.5-.68.5-1.156 0-.67-.453-1.152-.875-1.438-.422-.285-.895-.483-1.469-.656-1.147-.345-2.657-.609-4.437-.812a1.006 1.006 0 0 0-.188 0c-.008-.004-.022.004-.031 0A11.98 11.98 0 0 0 12 0zm0 2c2.71 0 5.145 1.06 6.938 2.781-1.839.325-4.258.532-6.938.532-2.68 0-5.1-.207-6.938-.532A9.964 9.964 0 0 1 12 2zM3.312 3.719c-.147.155-.266.337-.406.5-.162-.063-.343-.13-.469-.188.164-.071.253-.144.5-.218.112-.034.25-.062.376-.094zm17.375 0c.126.032.264.06.375.094.248.074.337.147.5.218-.125.059-.306.125-.468.188-.14-.163-.259-.345-.407-.5zM3.595 6.53c.14.032.259.063.406.094 2.088.433 4.895.688 8 .688 3.105 0 5.912-.255 8-.688.147-.03.266-.062.406-.094A10.034 10.034 0 0 1 22 12c0 5.564-4.436 10-10 10S2 17.564 2 12c0-2.022.581-3.904 1.594-5.469zM8 8a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-8.188 6.844-1.625 1.125C7.466 17.829 9.584 19 12 19s4.534-1.172 5.813-3.031l-1.625-1.125C15.265 16.184 13.783 17 12 17s-3.266-.816-4.188-2.156z"/>
+</svg>"
+`;
