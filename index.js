@@ -5,7 +5,8 @@ const AutocropUtils = require('./lib/AutocropUtils');
 exports.type = 'visitor';
 exports.name = 'autocrop';
 exports.active = true;
-exports.description = 'reduce viewBox to minimum possible size so no wasted transparent space around svg';
+exports.description =
+	'reduce viewBox to minimum possible size so no wasted transparent space around svg';
 
 /**
  * Reduce viewBox to minimum possible size so no wasted transparent space around svg.
