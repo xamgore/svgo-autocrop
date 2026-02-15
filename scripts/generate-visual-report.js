@@ -13,7 +13,8 @@ const PREVIEW_SIZE = 60;
 function main() {
 	const cases = collectCasesFromTests().map((item) => ({
 		...item,
-		outputSvg: item.outputSvg || '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
+		outputSvg:
+			item.outputSvg || '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
 	}));
 	const html = renderHtml(cases);
 	fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
@@ -46,13 +47,13 @@ function collectCasesFromTests() {
 		if (request === '@jest/globals') {
 			return { it, expect };
 		}
-			if (request === 'svgo') {
-				return {
-					optimize(input, options) {
-						const runPath = String(options?.path ?? '');
-						const caseIdMatch = /case-(.+)\.svg\.run1$/.exec(runPath);
-						const caseId = caseIdMatch ? caseIdMatch[1] : String(cases.length + 1);
-						const name = currentTestName || `Case ${caseId}`;
+		if (request === 'svgo') {
+			return {
+				optimize(input, options) {
+					const runPath = String(options?.path ?? '');
+					const caseIdMatch = /case-(.+)\.svg\.run1$/.exec(runPath);
+					const caseId = caseIdMatch ? caseIdMatch[1] : String(cases.length + 1);
+					const name = currentTestName || `Case ${caseId}`;
 					const entry = {
 						caseId,
 						name: name,

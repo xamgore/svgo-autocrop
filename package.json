@@ -26,14 +26,11 @@
 		"lint": "oxlint . --jest-plugin --node-plugin",
 		"lint:fix": "oxlint . --jest-plugin --node-plugin --fix",
 		"report:visual": "node scripts/generate-visual-report.js",
-		"test": "jest --maxWorkers=4",
-		"testfile": "node node_modules/jest/bin/jest.js -i",
-		"testname": "node node_modules/jest/bin/jest.js -t"
+		"test": "jest"
 	},
 	"license": "MIT",
 	"dependencies": {
-		"jimp": "^0.16.1",
-		"puppeteer": "*",
+		"@resvg/resvg-js": "^2.6.2",
 		"svg-pathdata": "^6.0.3",
 		"svgo": "^2.8.0"
 	},
