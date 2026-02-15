@@ -8,8 +8,7 @@ const PATH = require('path');
 const { EOL } = require('os');
 const { optimize } = require('svgo');
 const { it, expect } = require('@jest/globals');
-const Ensure = require('../lib/Ensure');
-const autocrop = Ensure.object(require('../index'));
+const autocrop = require('../index');
 
 it('01 - 10x10 box - viewBox - no parameters.', function () {
 	doTest(
