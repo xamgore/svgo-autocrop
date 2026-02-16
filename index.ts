@@ -1,6 +1,7 @@
 import type { CustomPlugin } from 'svgo';
 
 import type { AutocropParams } from './lib/AutocropUtils';
+
 import { plugin } from './lib/AutocropUtils';
 
 const autocrop: CustomPlugin<AutocropParams> = {
@@ -18,11 +19,12 @@ const autocrop: CustomPlugin<AutocropParams> = {
 	 *   <rect x="0" y="0" width="10" height="10" fill="#000"/>
 	 * </svg>
 	 *
-	 * @author Glennos
+	 * @author Igor Strebz
 	 */
 	fn: (ast, params = {}, info) => {
 		plugin(ast, params, info);
 	},
 };
 
-export = autocrop;
+export type { AutocropParams };
+export default autocrop;

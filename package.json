@@ -4,7 +4,7 @@
 	"packageManager": "pnpm@10.20.0",
 	"description": "SVGO plugin that reduces viewBox to minimum possible size so no wasted transparent space around svg",
 	"main": "index.ts",
-	"bin": "./bin/svgo",
+	"types": "index.d.ts",
 	"keywords": [
 		"svgo",
 		"svg",
@@ -13,20 +13,30 @@
 		"autocrop"
 	],
 	"author": {
-		"name": "Glennos",
-		"url": "https://github.com/glennosss"
+		"name": "Igor Strebz",
+		"url": "https://github.com/xamgore"
 	},
+	"contributors": [
+		{
+			"name": "Glennos",
+			"url": "https://github.com/glennosss"
+		}
+	],
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/glennosss/svgo-autocrop.git"
+		"url": "https://github.com/xamgore/svgo-autocrop.git"
 	},
-	"homepage": "https://github.com/glennosss/svgo-autocrop/",
+	"homepage": "https://github.com/xamgore/svgo-autocrop/",
+	"bugs": {
+		"url": "https://github.com/xamgore/svgo-autocrop/issues"
+	},
 	"scripts": {
 		"fmt": "oxfmt .",
 		"fmt:check": "oxfmt --check .",
 		"lint": "oxlint --type-aware --type-check --format=stylish .",
 		"lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
 		"report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
+		"jsr:check": "pnpm dlx jsr publish --dry-run",
 		"test": "jest",
 		"test:watch": "jest --watch"
 	},
@@ -47,7 +57,7 @@
 		"oxfmt": "^0.32.0",
 		"oxlint": "^1.47.0",
 		"oxlint-tsgolint": "^0.13.0",
-        "typescript": "6.0.0-dev.20260215"
+		"typescript": "6.0.0-dev.20260215"
 	},
 	"jest": {
 		"testEnvironment": "node",
