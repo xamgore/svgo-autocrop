@@ -10,7 +10,7 @@ function cloneAst(ast: XastRoot): XastRoot {
  * @param str SVG/XML string.
  * @param path Optional SVG path - only used if reporting error.
  */
-export function svg2js(str: string, path?: string): XastRoot {
+export function parseIntoTree(str: string, path?: string): XastRoot {
 	let ast: XastRoot | null = null;
 	const captureAstPlugin: CustomPlugin = {
 		name: 'capture-ast',
@@ -32,7 +32,7 @@ export function svg2js(str: string, path?: string): XastRoot {
 /**
  * Format the AST/Javascript in-memory representation back to the SVG/XML string.
  */
-export function js2svg(ast: XastRoot): string {
+export function stringifyTree(ast: XastRoot): string {
 	const astCopy = cloneAst(ast);
 	const injectAstPlugin: CustomPlugin = {
 		name: 'inject-ast',

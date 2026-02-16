@@ -223,28 +223,28 @@ export default class SvgTranslate {
 						node,
 					);
 				}
-				} else if (
-					attr === 'id' ||
-					attr === 'opacity' ||
-					attr === 'display' ||
-					attr === 'role' ||
-					attr === 'tabindex' ||
-					attr === 'focusable' ||
-					attr === 'preserveAspectRatio' ||
-					attr === 'pointer-events' ||
-					attr === 'shape-rendering' ||
-					attr === 'color-rendering' ||
-					attr === 'text-rendering' ||
-					attr.startsWith('fill-') ||
-					attr.startsWith('stroke-') ||
-					attr.startsWith('clip-') ||
-					attr.startsWith('aria-') ||
-					attr.startsWith('data-') ||
-					attr.startsWith('xmlns:') ||
-					attr.startsWith('xml:')
-				) {
-					return; // Can somewhat safely ignore these.
-				}
+			} else if (
+				attr === 'id' ||
+				attr === 'opacity' ||
+				attr === 'display' ||
+				attr === 'role' ||
+				attr === 'tabindex' ||
+				attr === 'focusable' ||
+				attr === 'preserveAspectRatio' ||
+				attr === 'pointer-events' ||
+				attr === 'shape-rendering' ||
+				attr === 'color-rendering' ||
+				attr === 'text-rendering' ||
+				attr.startsWith('fill-') ||
+				attr.startsWith('stroke-') ||
+				attr.startsWith('clip-') ||
+				attr.startsWith('aria-') ||
+				attr.startsWith('data-') ||
+				attr.startsWith('xmlns:') ||
+				attr.startsWith('xml:')
+			) {
+				return; // Can somewhat safely ignore these.
+			}
 		}
 		throw Ensure.unexpectedObject(`Unhandled <${node.name} ${attr}> attribute`, node);
 	}

@@ -6,12 +6,13 @@
  * Modified copy of https://github.com/svg/svgo/tree/master/test/plugins (see _index.test.js).
  */
 
+import type { AutocropParams } from 'svgo-autocrop';
+
 import { EOL } from 'node:os';
 import * as PATH from 'node:path';
 import { type CustomPlugin, optimize } from 'svgo';
 
-import type { AutocropParams } from '../lib/AutocropUtils';
-import autocrop = require('../index');
+import autocrop from '../index';
 
 it('01 - 10x10 box - viewBox - no parameters.', function () {
 	const actual = runPlugin(
@@ -393,15 +394,15 @@ it('22 - Smoke testing', function () {
             <path transform="translate(0,0)" fill="rgb(156,155,155)" d="M 554.228 729.711 C 659.104 725.931 747.227 807.802 751.164 912.672 C 755.1 1017.54 673.362 1105.79 568.498 1109.88 C 463.411 1113.98 374.937 1032.03 370.992 926.942 C 367.047 821.849 449.129 733.498 554.228 729.711 z"/>
         </svg>`,
 		{
-            removeClass: true,
-            removeStyle: true,
-            removeDeprecated: true,
-            setColor: 'currentColor',
-            setColorIssue: 'fail',
-            autocrop: true,
-        },
+			removeClass: true,
+			removeStyle: true,
+			removeDeprecated: true,
+			setColor: 'currentColor',
+			setColorIssue: 'fail',
+			autocrop: true,
+		},
 	);
-    expect(actual).toMatchSnapshot();
+	expect(actual).toMatchSnapshot();
 });
 
 function runPlugin(caseId: string, input: string, params: AutocropParams = {}): string {

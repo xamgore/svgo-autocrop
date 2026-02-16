@@ -19,7 +19,6 @@ export function getBounds(
 	height: number,
 	debugWriteFilePrefix?: string,
 ): ImageBounds {
-	svg = Ensure.string(svg, 'svg');
 	width = Ensure.integerStrict(width, 'width');
 	height = Ensure.integerStrict(height, 'height');
 

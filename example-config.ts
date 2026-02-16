@@ -1,4 +1,6 @@
-import autocrop = require('svgo-autocrop');
+import type { Config } from 'svgo';
+
+import autocrop, { type AutocropParams } from 'svgo-autocrop';
 
 /**
  * The below configuration is for monotone (i.e. single color) svgs. Any colour will be replaced with 'currentColor' so the color is inherited from the html/css.
@@ -6,41 +8,36 @@ import autocrop = require('svgo-autocrop');
  * If your svgs contain multiple colours, then remove the 'setColor'/'setColorIssue' attributes.
  */
 
-const config = {
-	multipass: true, // Keep running optimisations until doesn't optimise anymore.
+const config: Config = {
+    // Keep running optimizations until doesn't optimize anymore.
+	multipass: true,
 	plugins: [
-		{
-			// Include default optimisations
-			name: 'preset-default',
-			params: {
-				overrides: {
-					// Disable "remove 'viewBox'" plugin.
-					removeViewBox: false, // https://github.com/svg/svgo/blob/master/plugins/removeViewBox.js
-				},
-			},
-		},
-
 		// Remove width/height attributes and add the viewBox attribute if it's missing. Highly recommended so the <svg> scales!
-		'removeDimensions', // https://github.com/svg/svgo/blob/master/plugins/removeDimensions.js
+		// https://svgo.dev/docs/plugins/removeDimensions/
+		'removeDimensions',
 
 		// Sort attributes - helps with readability/compression.
-		'sortAttrs', // https://github.com/svg/svgo/blob/master/plugins/sortAttrs.js
+		// https://svgo.dev/docs/plugins/sortAttrs/
+		'sortAttrs',
 
 		// Keep styles consistent
-		'convertStyleToAttrs', // https://github.com/svg/svgo/blob/master/plugins/convertStyleToAttrs.js
+		// https://svgo.dev/docs/plugins/convertStyleToAttrs/
+		'convertStyleToAttrs',
 
 		// Remove <style> if present in svg
-		'removeStyleElement', // https://github.com/svg/svgo/blob/master/plugins/removeStyleElement.js
+		// https://svgo.dev/docs/plugins/removeStyleElement/
+		'removeStyleElement',
 
 		// Remove <script> if present in svg
-		'removeScripts', // https://github.com/svg/svgo/blob/master/plugins/removeScripts.js
+		// https://svgo.dev/docs/plugins/removeScripts/
+		'removeScripts',
 
 		{
-			// Run autocrop last (you'll get less issues if autocrop runs after the svgo's default 'convertTransform' and 'convertShapeToPath' plugins)
+			// Run autocrop last (you'll get fewer issues if autocrop runs after the SVGO's default 'convertTransform' and 'convertShapeToPath' plugins)
 			...autocrop,
 			params: {
 				autocrop: true,
-				includeWidthAndHeightAttributes: false, // Same as enabling 'removeDimensions' plugin (and disabling 'removeViewBox' plugin).
+				includeWidthAndHeightAttributes: false, // Mirrors https://svgo.dev/docs/plugins/removeDimensions/ behavior.
 
 				removeClass: true, // Remove 'class' attribute if encountered.
 				removeStyle: true, // Remove 'style'/'font-family' attribute if encountered.
@@ -48,9 +45,9 @@ const config = {
 
 				setColor: 'currentColor', // Replace any colors encountered with 'currentColor'.
 				setColorIssue: 'fail', // Fail if more than one color encountered.
-			},
+			} as AutocropParams,
 		},
 	],
 };
 
-export = config;
+export default config;
