@@ -1,8 +1,4 @@
-import { optimize, type CustomPlugin, type XastRoot } from 'svgo';
-
-function cloneAst(ast: XastRoot): XastRoot {
-	return structuredClone(ast);
-}
+import { type CustomPlugin, optimize, type XastParent, type XastRoot } from 'svgo';
 
 /**
  * Parse the SVG/XML string provided - and return the javascript in-memory representation.
@@ -15,7 +11,7 @@ export function parseIntoTree(str: string, path?: string): XastRoot {
 	const captureAstPlugin: CustomPlugin = {
 		name: 'capture-ast',
 		fn: (root) => {
-			ast = cloneAst(root);
+			ast = structuredClone(root);
 		},
 	};
 	optimize(str, {
@@ -32,8 +28,8 @@ export function parseIntoTree(str: string, path?: string): XastRoot {
 /**
  * Format the AST/Javascript in-memory representation back to the SVG/XML string.
  */
-export function stringifyTree(ast: XastRoot): string {
-	const astCopy = cloneAst(ast);
+export function stringifyTree(ast: XastParent): string {
+	const astCopy = structuredClone(ast);
 	const injectAstPlugin: CustomPlugin = {
 		name: 'inject-ast',
 		fn: (root) => {

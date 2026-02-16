@@ -1,6 +1,6 @@
 import type { Config } from 'svgo';
 
-import autocrop, { type AutocropParams } from 'svgo-autocrop';
+import autocrop, { type CropParams } from 'svgo-autocrop';
 
 /**
  * The below configuration is for monotone (i.e. single color) svgs. Any colour will be replaced with 'currentColor' so the color is inherited from the html/css.
@@ -9,10 +9,10 @@ import autocrop, { type AutocropParams } from 'svgo-autocrop';
  */
 
 const config: Config = {
-    // Keep running optimizations until doesn't optimize anymore.
+	// Keep running optimizations until doesn't optimize anymore.
 	multipass: true,
 	plugins: [
-		// Remove width/height attributes and add the viewBox attribute if it's missing. Highly recommended so the <svg> scales!
+		// Removes the width and height attribute from the top-most <svg> element if specified, and replaces it with the viewBox attribute if it's missing.
 		// https://svgo.dev/docs/plugins/removeDimensions/
 		'removeDimensions',
 
@@ -45,7 +45,7 @@ const config: Config = {
 
 				setColor: 'currentColor', // Replace any colors encountered with 'currentColor'.
 				setColorIssue: 'fail', // Fail if more than one color encountered.
-			} as AutocropParams,
+			} as CropParams,
 		},
 	],
 };

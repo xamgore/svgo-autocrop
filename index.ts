@@ -1,10 +1,10 @@
 import type { CustomPlugin } from 'svgo';
 
-import type { AutocropParams } from './lib/AutocropUtils';
+import type { CropParams } from './lib/AutocropUtils';
 
 import { plugin } from './lib/AutocropUtils';
 
-const autocrop: CustomPlugin<AutocropParams> = {
+const autocrop: CustomPlugin<CropParams> = {
 	name: 'autocrop',
 
 	/**
@@ -26,5 +26,5 @@ const autocrop: CustomPlugin<AutocropParams> = {
 	},
 };
 
-export type { AutocropParams };
+export type { CropParams };
 export default autocrop;

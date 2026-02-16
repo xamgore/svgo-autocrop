@@ -6,13 +6,18 @@
 		"paths": {
 			"svgo-autocrop": ["./index.ts"]
 		},
-		"strict": true,
-		"strictNullChecks": true,
-		"noImplicitAny": true,
-		"esModuleInterop": true,
 		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"noImplicitAny": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
+		"strict": true,
+		"strictNullChecks": true,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"noUncheckedIndexedAccess": true,
+		"strictBindCallApply": true,
+		"useUnknownInCatchVariables": true,
 		"forceConsistentCasingInFileNames": true,
 		"types": ["node", "jest"],
 		"noEmit": true

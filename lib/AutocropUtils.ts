@@ -8,7 +8,7 @@ import SvgTranslate, { ColorIssueReaction } from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
-type Viewbox = {
+type ViewBox = {
 	x: number;
 	y: number;
 	width: number;
@@ -23,30 +23,26 @@ type PaddingObject = {
 };
 
 type PaddingFunction = (
-	viewboxNew: Viewbox,
-	viewbox: Viewbox,
+	viewboxNew: ViewBox,
+	viewbox: ViewBox,
 	ast: XastRoot,
-	params: AutocropParams,
+	params: CropParams,
 	info: PluginInfo,
 ) => void;
 
-export type AutocropParams = {
-	/**
-	 * Disable auto cropping. Useful if you only want to use `removeClass` or `setColor`.
-	 */
+export type CropParams = {
+	/** Enable auto cropping. `true` by default. */
 	autocrop?: boolean;
 	/**
-	 * Controls how `<svg width>` / `<svg height>` are handled:
-	 * - `undefined`: only update width/height when they already exist (default)
-	 * - `true`: always write width/height
-	 * - `false`: delete width/height so the SVG scales via viewBox
+	 * Controls whether the root \<svg> "width" & "height" attributes:
 	 *
-	 * If `true`, also disable SVGO's default `removeViewBox` plugin and optionally
-	 * enable SVGO's `removeDimensions` plugin (see `example-config.ts`).
+	 * - `false`: are removed, making SVG scaling depend on viewBox;
+	 * - `true`: are set even if missing (values are derived from the viewBox attribute);
+	 * - `undefined`: are updated only if they are already present (default);
 	 */
 	includeWidthAndHeightAttributes?: boolean;
 	/**
-	 * Extra padding to apply after autocrop:
+	 * Adds extra padding after autocrop:
 	 * - number
 	 * - object `{ top, bottom, left, right }`
 	 * - function `(viewboxNew, viewbox?, ast?, params?, info?)` that mutates `viewboxNew`
@@ -55,93 +51,87 @@ export type AutocropParams = {
 	 */
 	padding?: number | PaddingObject | PaddingFunction;
 	/**
-	 * If `true`, removes the `class` attribute.
+	 * Removes all `class` attributes when `true`.
 	 */
 	removeClass?: boolean;
 	/**
-	 * If `true`, removes `style` and `font-family` attributes.
+	 * Removes all `style` and `font-family` attributes when `true`.
 	 */
 	removeStyle?: boolean;
 	/**
-	 * If `true`, removes `<svg version>` / `<svg baseProfile>` and other non-standard
-	 * attributes such as `sketch:type` and `data-name`.
+	 * Removes deprecated & redundant root \<svg> attributes
+	 * like "version", "baseProfile", "sketch:type", and "data-name".
 	 */
 	removeDeprecated?: boolean;
 	/**
-	 * If defined, replaces all colors with this value (usually `currentColor`).
+	 * Replaces all colors with this value when set (usually `currentColor`).
 	 * When multiple colors are encountered, behavior is controlled by `setColorIssue`.
 	 */
 	setColor?: string;
 	/**
-	 * Action when `setColor` is defined and multiple colors are found:
-	 * - `warn`: log warning
-	 * - `fail`: throw error
-	 * - `rollback`: keep autocrop, but undo translate / removeClass / setColor
+	 * Controls what happens when `setColor` is set and multiple colors are found:
+	 * - `warn`: log a warning
+	 * - `fail`: throw an error
+	 * - `rollback`: keep autocrop, but undo translate/cleanup changes
 	 * - `ignore`: force all colors to `setColor` with no warning/error
 	 */
 	setColorIssue?: ColorIssueReaction;
 	/**
-	 * Global override that disables translation back to `(0, 0)`.
-	 * Also disables `removeClass`, `removeDeprecated`, and `setColor`.
-	 *
-	 * If `true`, this plugin only autocrops.
+	 * Disables translating the SVG back to `(0, 0)` when `true`.
+	 * Also disables translate-based cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
 	 */
 	disableTranslate?: boolean;
 	/**
-	 * If `true`, suppress warnings when translation back to `(0, 0)` fails or when
-	 * `removeClass`, `removeDeprecated`, or `setColor` cannot be applied.
+	 * Suppresses warnings when `true` if translation/cleanup cannot be applied.
 	 */
 	disableTranslateWarning?: boolean;
-	/** Debug option: log old/new viewBox values to the console. */
-	debug?: boolean;
-	/**
-	 * Debug option:
-	 * - `true`: write `"${srcSvg}.png"` and `"${srcSvg}.svg"` to disk
-	 * - string: write `"${debugWriteFiles}.png"` and `"${debugWriteFiles}.svg"` to disk
-	 */
-	debugWriteFiles?: boolean | string;
 };
 
-export function plugin(ast: XastRoot, params: AutocropParams = {}, info: PluginInfo): void {
+export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo): void {
+	params = { ...params };
 	try {
-		// Get <svg> attributes
-		let attributes = getSvgAttributes(ast);
-		let includeWidthAndHeightAttributes = isIncludeWidthAndHeightAttributes(params, attributes);
+		// Get root <svg> node and attributes
+		let svgNode = unwrapSingleSvgElement(ast);
+		let attrs = svgNode.attributes;
+		const dimensionsPresent = Boolean(attrs.width || attrs.height);
 
-		// Get viewbox as specified by <svg viewbox> or implied by <svg width/height>
-		let viewbox = getViewbox(attributes);
+		const vb = attrs.viewBox
+			? parseViewBoxAttr(attrs.viewBox)
+			: deriveViewBoxFromDimensions(attrs);
 
 		// Ensure width/height set (need svg to be fixed size rather than scaling to screen)
-		attributes.width = `${viewbox.width}`;
-		attributes.height = `${viewbox.height}`;
-		let svg = stringifyTree(ast);
-		let astSnapshot = structuredClone(ast);
+		attrs.width = `${vb.width}`;
+		attrs.height = `${vb.height}`;
+		const svg = stringifyTree(ast);
+		const astSnapshot = structuredClone(ast);
 
 		// Only render the SVG on the first call.
 		// We still do everything else (like translate) because after the <svg>
 		// is optimized, translate may succeed if it was previously failing.
-		let viewboxNew: Viewbox;
-		let multipassCount = info.multipassCount;
-		if (multipassCount !== 0 || params.autocrop === false) {
-			viewboxNew = viewbox;
+		let vbNew: ViewBox;
+		if (info.multipassCount === 0 && params.autocrop !== false) {
+			vbNew = getViewboxWithoutPadding(svg, vb);
+			addPadding(vbNew, vb, ast, params, info);
 		} else {
-			viewboxNew = getViewboxWithoutPadding(svg, viewbox, params, info);
-			addPadding(viewboxNew, viewbox, ast, params, info);
+			vbNew = vb;
 		}
 
 		// Attempt to translate back to (0,0) if not already (0,0)
-		if (!translate(ast, params, viewboxNew, multipassCount)) {
-			// Roll back ast because it may currently be in an inconsistent/partially modified state.
+		const ok = translate(ast, params, vbNew, info.multipassCount);
+		if (!ok) {
+			// rollback AST because it may be in an inconsistent/partially modified state.
 			ast.children = astSnapshot.children;
-			attributes = getSvgAttributes(ast);
+			svgNode = unwrapSingleSvgElement(ast);
+			attrs = svgNode.attributes;
 		}
 
-		assignViewbox(attributes, viewboxNew, includeWidthAndHeightAttributes);
-
-		if (params.debug) {
-			console.log(
-				`Old viewbox: ${JSON.stringify(viewbox)}. New viewbox: ${JSON.stringify(viewboxNew)}`,
-			);
+		attrs.viewBox = `${vbNew.x} ${vbNew.y} ${vbNew.width} ${vbNew.height}`;
+		if (params.includeWidthAndHeightAttributes ?? dimensionsPresent) {
+			attrs.width = `${vbNew.width}`;
+			attrs.height = `${vbNew.height}`;
+		} else {
+			delete attrs.width;
+			delete attrs.height;
 		}
 	} catch (e) {
 		console.error(`Failed to process: ${info.path}`);
@@ -149,37 +139,27 @@ export function plugin(ast: XastRoot, params: AutocropParams = {}, info: PluginI
 	}
 }
 
-function getViewboxWithoutPadding(
-	svg: string,
-	viewbox: Viewbox,
-	params: AutocropParams,
-	info: PluginInfo,
-): Viewbox {
+function getViewboxWithoutPadding(svg: string, vb: ViewBox): ViewBox {
 	// Render SVG to RGBA pixels using resvg and calculate non-transparent bounds.
-	let bounds = getBounds(
-		svg,
-		viewbox.width,
-		viewbox.height,
-		getDebugWriteFilePrefix(params, info),
-	);
-	if (bounds.width !== viewbox.width || bounds.height !== viewbox.height) {
+	const bounds = getBounds(svg, vb.width, vb.height);
+	if (bounds.width !== vb.width || bounds.height !== vb.height) {
 		throw new Error(
-			`Loaded png had unexpected width/height\n<svg viewbox>=${JSON.stringify(viewbox)}, png bounds=${JSON.stringify(bounds)}`,
+			`Loaded png had unexpected width/height\n<svg viewbox>=${JSON.stringify(vb)}, png bounds=${JSON.stringify(bounds)}`,
 		);
 	}
 	return {
-		x: viewbox.x + bounds.xMin,
-		y: viewbox.y + bounds.yMin,
+		x: vb.x + bounds.xMin,
+		y: vb.y + bounds.yMin,
 		width: bounds.xMax - bounds.xMin + 1,
 		height: bounds.yMax - bounds.yMin + 1,
 	};
 }
 
 function addPadding(
-	viewboxNew: Viewbox,
-	viewbox: Viewbox,
+	vbNew: ViewBox,
+	vb: ViewBox,
 	ast: XastRoot,
-	params: AutocropParams,
+	params: CropParams,
 	info: PluginInfo,
 ): void {
 	const padding = params.padding;
@@ -187,22 +167,22 @@ function addPadding(
 		return;
 	}
 	if (typeof padding === 'number') {
-		viewboxNew.x -= padding;
-		viewboxNew.y -= padding;
-		viewboxNew.width += padding * 2;
-		viewboxNew.height += padding * 2;
+		vbNew.x -= padding;
+		vbNew.y -= padding;
+		vbNew.width += padding * 2;
+		vbNew.height += padding * 2;
 	} else if (typeof padding === 'object') {
-		let top = Ensure.integer(padding.top, 'padding.top');
-		let bottom = Ensure.integer(padding.bottom, 'padding.bottom');
-		let left = Ensure.integer(padding.left, 'padding.left');
-		let right = Ensure.integer(padding.right, 'padding.right');
+		const top = Ensure.integer(padding.top, 'padding.top');
+		const bottom = Ensure.integer(padding.bottom, 'padding.bottom');
+		const left = Ensure.integer(padding.left, 'padding.left');
+		const right = Ensure.integer(padding.right, 'padding.right');
 
-		viewboxNew.x -= left;
-		viewboxNew.y -= top;
-		viewboxNew.width += left + right;
-		viewboxNew.height += top + bottom;
+		vbNew.x -= left;
+		vbNew.y -= top;
+		vbNew.width += left + right;
+		vbNew.height += top + bottom;
 	} else if (typeof padding === 'function') {
-		padding(viewboxNew, viewbox, ast, params, info);
+		padding(vbNew, vb, ast, params, info);
 	} else {
 		throw Ensure.unexpectedObject('Unsupported padding specified', padding);
 	}
@@ -214,20 +194,19 @@ function addPadding(
  */
 function translate(
 	ast: XastRoot,
-	params: AutocropParams,
-	viewboxNew: Viewbox,
+	params: CropParams,
+	vbNew: ViewBox,
 	multipassCount: number,
 ): boolean {
 	if (params.disableTranslate) {
 		return true; // Nothing to do.
 	}
-	let x = viewboxNew.x;
-	let y = viewboxNew.y;
-	let removeClass = params.removeClass;
-	let removeStyle = params.removeStyle;
-	let removeDeprecated = params.removeDeprecated;
-	let setColor = params.setColor;
-	if (x === 0 && y === 0 && !removeClass && !removeStyle && !removeDeprecated && !setColor) {
+	const x = vbNew.x;
+	const y = vbNew.y;
+	const removeClass = params.removeClass;
+	const removeStyle = params.removeStyle;
+	const removeDeprecated = params.removeDeprecated;
+    if (x === 0 && y === 0 && !removeClass && !removeStyle && !removeDeprecated && !params.setColor) {
 		return true; // Nothing to do.
 	}
 
@@ -240,34 +219,33 @@ function translate(
 			removeClass,
 			removeStyle,
 			removeDeprecated,
-			setColor,
+			params.setColor,
 			params.setColorIssue,
 		).translate(ast);
-	} catch (e) {
-		if (e instanceof SvgTranslateError) {
-			let type = e.type;
-			if (type === 'silentRollback') {
+	} catch (err) {
+		if (err instanceof SvgTranslateError) {
+			if (err.type === 'silentRollback') {
 				return false; // Rollback!
 			}
-			throw e; // Fail outright when this error is thrown.
+			throw err; // Fail outright when this error is thrown.
 		} else if (!params.disableTranslateWarning) {
 			console.warn(
 				`Failed to translate <svg> by (${x}, ${y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
 					`Ideally you should update the code to fix this issue so translation can properly occur.\n` +
 					`The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`,
-				e,
+				err,
 			);
 		}
 		return false; // Rollback!
 	}
 
 	// Return successfully translated ast
-	viewboxNew.x = 0;
-	viewboxNew.y = 0;
+	vbNew.x = 0;
+	vbNew.y = 0;
 	return true;
 }
 
-function getSvgAttributes(ast: XastRoot): Record<string, string> {
+function unwrapSingleSvgElement(ast: XastRoot): XastElement {
 	const svgs = ast.children.filter(
 		(node): node is XastElement => node.type === 'element' && node.name === 'svg',
 	);
@@ -275,89 +253,34 @@ function getSvgAttributes(ast: XastRoot): Record<string, string> {
 	if (ast.children.length === 0) {
 		throw new Error('AST contains no nodes');
 	} else if (svgs.length === 0) {
-		throw new Error("AST didn't contain root <svg> element");
+		throw new Error("AST doesn't contain root <svg> element");
 	} else if (svgs.length > 1) {
 		throw new Error('AST contains multiple root <svg> elements');
 	}
 
-	return svgs[0].attributes;
+	return svgs[0]!;
 }
 
-function getDebugWriteFilePrefix(params: AutocropParams, info: PluginInfo): string | undefined {
-	const value = params.debugWriteFiles;
-	if (!value) {
-		return undefined;
-	}
-	if (typeof value === 'boolean') {
-		let path = info.path;
-		if (!path) {
-			throw new Error(
-				"Param 'debugWriteFiles' enabled - but couldn't determine path of SVG - set 'debugWriteFiles' to path instead so can write debug files",
-			);
-		}
-		return path;
-	} else if (typeof value === 'string') {
-		return value;
-	}
-	throw Ensure.unexpectedObject("Unknown 'debugWriteFiles' params value specified", value);
+function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBox {
+	return {
+		x: 0,
+		y: 0,
+		width: Ensure.integer(attributes.width, '/svg/@width'),
+		height: Ensure.integer(attributes.height, '/svg/@height'),
+	};
 }
 
-function isIncludeWidthAndHeightAttributes(
-	params: AutocropParams,
-	attributes: Record<string, string>,
-): boolean {
-	let flag: unknown = params.includeWidthAndHeightAttributes;
-	if (flag === undefined) {
-		// Default to including only if already included in svg.
-		flag = attributes.width || attributes.height;
-	} else if (typeof flag !== 'boolean') {
-		throw Ensure.unexpectedObject(
-			"Invalid 'includeWidthAndHeightAttributes' param - expected either 'boolean' or 'undefined' (which defaults to true/false depending on whether svg already includes a width/height",
-			flag,
+function parseViewBoxAttr(attr: string): ViewBox {
+	const array = attr.split(/[ ,]+/, 4);
+	if (array.length !== 4) {
+		throw new Error(
+			`[/svg/@viewBox] Invalid attribute. Expected viewBox to specify 4 parts, got "${attr}".`,
 		);
 	}
-	return !!flag;
-}
-
-/**
- * @return object taking the form {x, y, width, height}.
- */
-function getViewbox(attributes: Record<string, string>): Viewbox {
-	let viewbox = attributes.viewBox;
-	let x, y, width, height;
-	if (!viewbox) {
-		x = 0;
-		y = 0;
-		height = Ensure.integer(attributes.height, '<svg height>');
-		width = Ensure.integer(attributes.width, '<svg width>');
-	} else {
-		Ensure.string(viewbox, '<svg viewbox>');
-		let array = viewbox.split(/[ ,]+/);
-		if (array.length !== 4) {
-			throw new Error(
-				`Invalid <svg viewbox='${viewbox}'> attribute - expected viewbox to specify 4 parts.`,
-			);
-		}
-		x = Ensure.integer(array[0], '<svg viewbox[0]>');
-		y = Ensure.integer(array[1], '<svg viewbox[1]>');
-		width = Ensure.integer(array[2], '<svg viewbox[2]>');
-		height = Ensure.integer(array[3], '<svg viewbox[3]>');
-	}
-	return { x, y, width, height };
-}
-
-function assignViewbox(
-	attributes: Record<string, string>,
-	viewbox: Viewbox,
-	includeWidthAndHeightAttributes: boolean,
-): void {
-	if (includeWidthAndHeightAttributes) {
-		attributes.width = `${viewbox.width}`;
-		attributes.height = `${viewbox.height}`;
-	} else {
-		delete attributes.width;
-		delete attributes.height;
-	}
-
-	attributes.viewBox = `${viewbox.x} ${viewbox.y} ${viewbox.width} ${viewbox.height}`;
+	return {
+		x: Ensure.integer(array[0], '/svg/@viewBox#0'),
+		y: Ensure.integer(array[1], '/svg/@viewBox#1'),
+		width: Ensure.integer(array[2], '/svg/@viewBox#2'),
+		height: Ensure.integer(array[3], '/svg/@viewBox#3'),
+	};
 }

@@ -1,5 +1,4 @@
 import { Resvg } from '@resvg/resvg-js';
-import fs from 'node:fs';
 
 import Ensure from './Ensure';
 
@@ -13,12 +12,7 @@ export type ImageBounds = {
 };
 
 /** Render svg and return width/height and bounds of visible pixels. */
-export function getBounds(
-	svg: string,
-	width: number,
-	height: number,
-	debugWriteFilePrefix?: string,
-): ImageBounds {
+export function getBounds(svg: string, width: number, height: number): ImageBounds {
 	width = Ensure.integerStrict(width, 'width');
 	height = Ensure.integerStrict(height, 'height');
 
@@ -28,18 +22,12 @@ export function getBounds(
 		throw new Error(`Invalid width/height provided; width=${width}, height=${height}`);
 	}
 
-	let renderedImage = new Resvg(svg).render();
-
-	if (debugWriteFilePrefix) {
-		fs.writeFileSync(`${debugWriteFilePrefix}.png`, renderedImage.asPng());
-		fs.writeFileSync(`${debugWriteFilePrefix}.svg`, svg);
-	}
-
-	return getVisiblePixelBounds(renderedImage.pixels, renderedImage.width, renderedImage.height);
+	const img = new Resvg(svg).render();
+	return getVisiblePixelBounds(img.pixels, img.width, img.height);
 }
 
 function getVisiblePixelBounds(pixels: Buffer, width: number, height: number): ImageBounds {
-	let expectedPixelCount = width * height * 4;
+	const expectedPixelCount = width * height * 4;
 	if (!pixels || pixels.length !== expectedPixelCount) {
 		throw new Error(
 			`Invalid rendered image pixels; expected length=${expectedPixelCount}, actual=${pixels?.length ?? null}`,
@@ -51,12 +39,12 @@ function getVisiblePixelBounds(pixels: Buffer, width: number, height: number): I
 	let yMin = height;
 	let xMax = -1;
 	let yMax = -1;
-	let rowStride = width * 4;
+	const rowStride = width * 4;
 
 	for (let y = 0; y < height; y++) {
-		let rowStart = y * rowStride;
+		const rowStart = y * rowStride;
 		for (let x = 0; x < width; x++) {
-			let alpha = pixels[rowStart + x * 4 + 3];
+			const alpha = pixels[rowStart + x * 4 + 3]!;
 			// the pixel is visible?
 			if (alpha > 0) {
 				if (x < xMin) {
@@ -78,7 +66,7 @@ function getVisiblePixelBounds(pixels: Buffer, width: number, height: number): I
 		throw new Error('Image has no visible pixels');
 	}
 
-	let result = { width, height, xMin, yMin, xMax, yMax };
+	const result = { width, height, xMin, yMin, xMax, yMax };
 	if (0 <= xMin && xMin <= xMax && xMax < width && 0 <= yMin && yMin <= yMax && yMax < height) {
 		return result;
 	}

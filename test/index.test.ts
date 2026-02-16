@@ -6,7 +6,7 @@
  * Modified copy of https://github.com/svg/svgo/tree/master/test/plugins (see _index.test.js).
  */
 
-import type { AutocropParams } from 'svgo-autocrop';
+import type { CropParams } from 'svgo-autocrop';
 
 import { EOL } from 'node:os';
 import * as PATH from 'node:path';
@@ -21,10 +21,7 @@ it('01 - 10x10 box - viewBox - no parameters.', function () {
         <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
             <rect x="5" y="5" width="10" height="10" fill="#000"/>
         </svg>`,
-		{
-			debug: false,
-			debugWriteFiles: false,
-		},
+		{},
 	);
 	expect(actual).toMatchSnapshot();
 });
@@ -38,8 +35,6 @@ it("02 - 10x10 box - viewBox - 'includeWidthAndHeightAttributes' parameter.", fu
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: true,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -52,10 +47,7 @@ it('03 - 10x10 box - width/height - no parameters.', function () {
         <svg width="20" height="20" xmlns="http://www.w3.org/2000/svg">
             <rect x="5" y="5" width="10" height="10" fill="#000"/>
         </svg>`,
-		{
-			debug: false,
-			debugWriteFiles: false,
-		},
+		{},
 	);
 	expect(actual).toMatchSnapshot();
 });
@@ -69,8 +61,6 @@ it("04 - 10x10 box - width/height - 'includeWidthAndHeightAttributes' parameter.
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: false,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -85,8 +75,6 @@ it('05 - 11x11 box.', function () {
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: false,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -101,8 +89,6 @@ it('06 - 12x12 box.', function () {
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: false,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -117,8 +103,6 @@ it('07 - 12x12 box.', function () {
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: false,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -134,8 +118,6 @@ it("08 - '$' sign.", function () {
         </svg>`,
 		{
 			includeWidthAndHeightAttributes: false,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -150,8 +132,6 @@ it('09 - 10x10 box - viewBox - padding 1px.', function () {
         </svg>`,
 		{
 			padding: 1,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -166,8 +146,6 @@ it('10 - 10x10 box - viewBox - padding 2px.', function () {
         </svg>`,
 		{
 			padding: 2,
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -187,8 +165,6 @@ it('11 - 10x10 box - viewBox - padding custom 1.', function () {
 				bottom: 3,
 				right: 4,
 			},
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -208,8 +184,6 @@ it('12 - 10x10 box - viewBox - padding custom 2.', function () {
 				bottom: 30,
 				right: 40,
 			},
-			debug: false,
-			debugWriteFiles: false,
 		},
 	);
 	expect(actual).toMatchSnapshot();
@@ -405,8 +379,8 @@ it('22 - Smoke testing', function () {
 	expect(actual).toMatchSnapshot();
 });
 
-function runPlugin(caseId: string, input: string, params: AutocropParams = {}): string {
-	const plugin: CustomPlugin<AutocropParams> = {
+function runPlugin(caseId: string, input: string, params: CropParams = {}): string {
+	const plugin: CustomPlugin<CropParams> = {
 		...autocrop,
 		params: params,
 	};
@@ -416,9 +390,5 @@ function runPlugin(caseId: string, input: string, params: AutocropParams = {}): 
 		plugins: [plugin],
 		js2svg: { pretty: true },
 	});
-	const normalized = result.data.trim().replaceAll(EOL, '\n');
-	if (params.debug) {
-		console.debug(`[Run 1] ${runPath}\n[Input] ${input.trim()}\n[Output] ${normalized.trim()}`);
-	}
-	return normalized;
+    return result.data.trim().replaceAll(EOL, '\n');
 }

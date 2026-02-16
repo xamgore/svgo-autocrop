@@ -4,8 +4,8 @@ import SvgTranslate from './SvgTranslate';
 import { parseIntoTree, stringifyTree } from './SvgUtils';
 
 function translate([dx, dy]: number[], svg: string): string {
-	let ast = parseIntoTree(svg);
-	new SvgTranslate(dx, dy).translate(ast);
+	const ast = parseIntoTree(svg);
+	new SvgTranslate(dx!, dy!).translate(ast);
 	return stringifyTree(ast);
 }
 

@@ -24,7 +24,7 @@ export default class Ensure {
 		Ensure.notNull(value, xpath);
 
 		if (typeof value === 'string') {
-			let _value = parseInt(value, 10);
+			const _value = parseInt(value, 10);
 			if (!isFinite(_value)) {
 				throw new TypeError(`[${xpath}] Invalid integer: cannot parse "${value}"`);
 			}
@@ -50,7 +50,7 @@ export default class Ensure {
 	 */
 	static integerStrict(value: number, xpath: string) {
 		if (!Number.isSafeInteger(value)) {
-			throw new Error(`[${xpath}] Not valid integer: ${value}`);
+			throw new TypeError(`[${xpath}] Not valid integer: ${value}`);
 		}
 		return value;
 	}

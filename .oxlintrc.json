@@ -17,10 +17,12 @@
 		"no-inline-comments": "off",
 		"no-negated-condition": "off",
 		"no-warning-comments": "off",
+		"prefer-const": "error",
 		"sort-vars": "off",
 		"typescript/no-any": "error",
 		"typescript/no-extraneous-class": "off",
 		"typescript/strict-boolean-expressions": "off",
+		"typescript/prefer-nullish-coalescing": "off",
 		"unicorn/no-static-only-class": "off"
 	}
 }
