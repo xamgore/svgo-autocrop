@@ -5,7 +5,7 @@ import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
 import SvgRecolor, { RecolorParams } from './SvgRecolor';
-import SvgRemoveStyle from './SvgRemoveStyle';
+import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle';
 import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
@@ -32,7 +32,7 @@ type PaddingFunction = (
     info: PluginInfo,
 ) => void;
 
-export type CropParams = RecolorParams & {
+export type CropParams = RemoveStyleParams & RecolorParams & {
     /** Enable auto cropping. `true` by default. */
     autocrop?: boolean;
     /**
@@ -56,10 +56,6 @@ export type CropParams = RecolorParams & {
      * Removes all `class` attributes when `true`.
      */
     removeClass?: boolean;
-    /**
-     * Removes all `style`, `font-family`, and `overflow="visible"` attributes when `true`.
-     */
-    removeStyle?: boolean;
     /**
      * Removes deprecated & redundant root \<svg> attributes
      * like "version", "baseProfile", "sketch:type", and "data-name".
