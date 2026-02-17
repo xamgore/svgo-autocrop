@@ -8,14 +8,12 @@ import { stringifyTree } from './SvgUtils';
 
 export default class SvgTranslate {
     /**
-     * @removeClass If true, then delete 'class' attribute.
      * @removeDeprecated If true, then delete <svg version/baseProfile> attributes. Also deletes other non-standard/not useful attributes like 'sketch:type'/'data-name'/etc.
      */
     constructor(
         private x: number,
         private y: number,
         private multipassCount = 0,
-        private removeClass = false,
         private removeDeprecated = false,
     ) {}
 
@@ -124,9 +122,7 @@ export default class SvgTranslate {
         ) {
             return; // Handled by recolor pass.
         } else if (attr === 'class') {
-            if (this.removeClass) {
-                delete node.attributes[attr];
-            }
+            // Handled by class-cleanup pass.
             return;
         } else if (attr === 'style' || attr === 'font-family' || attr === 'overflow') {
             // Handled by style-cleanup pass.

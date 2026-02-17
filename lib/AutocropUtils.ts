@@ -5,6 +5,7 @@ import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
 import SvgRecolor, { RecolorParams } from './SvgRecolor';
+import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass';
 import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle';
 import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
@@ -32,45 +33,43 @@ type PaddingFunction = (
     info: PluginInfo,
 ) => void;
 
-export type CropParams = RemoveStyleParams & RecolorParams & {
-    /** Enable auto cropping. `true` by default. */
-    autocrop?: boolean;
-    /**
-     * Controls whether the root \<svg> "width" & "height" attributes:
-     *
-     * - `false`: are removed, making SVG scaling depend on viewBox;
-     * - `true`: are set even if missing (values are derived from the viewBox attribute);
-     * - `undefined`: are updated only if they are already present (default);
-     */
-    includeWidthAndHeightAttributes?: boolean;
-    /**
-     * Adds extra padding after autocrop:
-     * - number
-     * - object `{ top, bottom, left, right }`
-     * - function `(viewboxNew, viewbox?, ast?, params?, info?)` that mutates `viewboxNew`
-     *
-     * Padding is usually better handled in CSS instead of in the SVG.
-     */
-    padding?: number | PaddingObject | PaddingFunction;
-    /**
-     * Removes all `class` attributes when `true`.
-     */
-    removeClass?: boolean;
-    /**
-     * Removes deprecated & redundant root \<svg> attributes
-     * like "version", "baseProfile", "sketch:type", and "data-name".
-     */
-    removeDeprecated?: boolean;
-    /**
-     * Disables translating the SVG back to `(0, 0)` when `true`.
-     * Also disables translate-based cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
-     */
-    disableTranslate?: boolean;
-    /**
-     * Suppresses warnings when `true` if translation/cleanup cannot be applied.
-     */
-    disableTranslateWarning?: boolean;
-};
+export type CropParams = RemoveClassParams &
+    RemoveStyleParams &
+    RecolorParams & {
+        /** Enable auto cropping. `true` by default. */
+        autocrop?: boolean;
+        /**
+         * Controls whether the root \<svg> "width" & "height" attributes:
+         *
+         * - `false`: are removed, making SVG scaling depend on viewBox;
+         * - `true`: are set even if missing (values are derived from the viewBox attribute);
+         * - `undefined`: are updated only if they are already present (default);
+         */
+        includeWidthAndHeightAttributes?: boolean;
+        /**
+         * Adds extra padding after autocrop:
+         * - number
+         * - object `{ top, bottom, left, right }`
+         * - function `(viewboxNew, viewbox?, ast?, params?, info?)` that mutates `viewboxNew`
+         *
+         * Padding is usually better handled in CSS instead of in the SVG.
+         */
+        padding?: number | PaddingObject | PaddingFunction;
+        /**
+         * Removes deprecated & redundant root \<svg> attributes
+         * like "version", "baseProfile", "sketch:type", and "data-name".
+         */
+        removeDeprecated?: boolean;
+        /**
+         * Disables translating the SVG back to `(0, 0)` when `true`.
+         * Also disables cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
+         */
+        disableTranslate?: boolean;
+        /**
+         * Suppresses warnings when `true` if translation/cleanup cannot be applied.
+         */
+        disableTranslateWarning?: boolean;
+    };
 
 export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo): void {
     params = { ...params };
@@ -183,14 +182,14 @@ function translate(
     vbNew: ViewBox,
     multipassCount: number,
 ): boolean {
+    const requiresClassPass = Boolean(params.removeClass);
     const requiresStylePass = Boolean(params.removeStyle);
     const requiresRecolorPass = Boolean(params.setColor);
-    const requiresTranslatePass =
-        vbNew.x !== 0 || vbNew.y !== 0 || params.removeClass || params.removeDeprecated;
+    const requiresTranslatePass = vbNew.x !== 0 || vbNew.y !== 0 || params.removeDeprecated;
 
     if (
         params.disableTranslate ||
-        (!requiresTranslatePass && !requiresStylePass && !requiresRecolorPass)
+        (!requiresTranslatePass && !requiresClassPass && !requiresStylePass && !requiresRecolorPass)
     ) {
         return true; // Nothing to do.
     }
@@ -198,16 +197,16 @@ function translate(
     try {
         if (requiresTranslatePass) {
             // Attempt to translate back to (0, 0)
-            new SvgTranslate(
-                -vbNew.x,
-                -vbNew.y,
-                multipassCount,
-                params.removeClass,
-                params.removeDeprecated,
-            ).translate(ast);
+            new SvgTranslate(-vbNew.x, -vbNew.y, multipassCount, params.removeDeprecated).translate(
+                ast,
+            );
 
             vbNew.x = 0;
             vbNew.y = 0;
+        }
+
+        if (requiresClassPass) {
+            new SvgRemoveClass().remove(ast);
         }
 
         if (requiresStylePass) {
