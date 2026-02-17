@@ -4,7 +4,8 @@ import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
-import SvgTranslate, { ColorIssueReaction } from './SvgTranslate';
+import SvgRecolor, { RecolorParams } from './SvgRecolor';
+import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
@@ -30,7 +31,7 @@ type PaddingFunction = (
 	info: PluginInfo,
 ) => void;
 
-export type CropParams = {
+export type CropParams = RecolorParams & {
 	/** Enable auto cropping. `true` by default. */
 	autocrop?: boolean;
 	/**
@@ -63,19 +64,6 @@ export type CropParams = {
 	 * like "version", "baseProfile", "sketch:type", and "data-name".
 	 */
 	removeDeprecated?: boolean;
-	/**
-	 * Replaces all colors with this value when set (usually `currentColor`).
-	 * When multiple colors are encountered, behavior is controlled by `setColorIssue`.
-	 */
-	setColor?: string;
-	/**
-	 * Controls what happens when `setColor` is set and multiple colors are found:
-	 * - `warn`: log a warning
-	 * - `fail`: throw an error
-	 * - `rollback`: keep autocrop, but undo translate/cleanup changes
-	 * - `ignore`: force all colors to `setColor` with no warning/error
-	 */
-	setColorIssue?: ColorIssueReaction;
 	/**
 	 * Disables translating the SVG back to `(0, 0)` when `true`.
 	 * Also disables translate-based cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
@@ -206,22 +194,32 @@ function translate(
 	const removeClass = params.removeClass;
 	const removeStyle = params.removeStyle;
 	const removeDeprecated = params.removeDeprecated;
-    if (x === 0 && y === 0 && !removeClass && !removeStyle && !removeDeprecated && !params.setColor) {
+	const requiresTranslatePass =
+		x !== 0 || y !== 0 || removeClass || removeStyle || removeDeprecated;
+	const requiresRecolorPass = Boolean(params.setColor);
+	if (!requiresTranslatePass && !requiresRecolorPass) {
 		return true; // Nothing to do.
 	}
 
-	// Attempt to translate back to (0, 0)
 	try {
-		new SvgTranslate(
-			-x,
-			-y,
-			multipassCount,
-			removeClass,
-			removeStyle,
-			removeDeprecated,
-			params.setColor,
-			params.setColorIssue,
-		).translate(ast);
+		if (requiresTranslatePass) {
+			// Attempt to translate back to (0, 0)
+			new SvgTranslate(
+				-x,
+				-y,
+				multipassCount,
+				removeClass,
+				removeStyle,
+				removeDeprecated,
+			).translate(ast);
+
+			vbNew.x = 0;
+			vbNew.y = 0;
+		}
+
+		if (requiresRecolorPass) {
+			new SvgRecolor(params.setColor!, params.setColorIssue).recolor(ast);
+		}
 	} catch (err) {
 		if (err instanceof SvgTranslateError) {
 			if (err.type === 'silentRollback') {
@@ -239,9 +237,6 @@ function translate(
 		return false; // Rollback!
 	}
 
-	// Return successfully translated ast
-	vbNew.x = 0;
-	vbNew.y = 0;
 	return true;
 }
 

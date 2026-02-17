@@ -6,19 +6,11 @@ import Ensure from './Ensure';
 import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
-export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
-
 export default class SvgTranslate {
-    // Used to store lowercase color previously encountered.
-    // If 'setColor' is defined, and we encounter more than one color, then we fail.
-	private previousColor: string | null = null;
-
-    /**
+	/**
 	 * @removeClass If true, then delete 'class' attribute.
 	 * @removeStyle If true, then delete 'style' and other styling attributes.
 	 * @removeDeprecated If true, then delete <svg version/baseProfile> attributes. Also deletes other non-standard/not useful attributes like 'sketch:type'/'data-name'/etc.
-	 * @setColor If provided, then replace all colors with color specified. Usually set to 'currentColor'.
-	 * @setColorIssue Either undefined/'warn', 'fail', 'rollback' or 'ignore'. See "README.md#Parameters" for a full description of these values.
 	 */
 	constructor(
 		private x: number,
@@ -27,22 +19,7 @@ export default class SvgTranslate {
 		private removeClass = false,
 		private removeStyle = false,
 		private removeDeprecated = false,
-		private setColor: string | null = null,
-		private setColorIssue: ColorIssueReaction = 'warn',
-	) {
-		// todo: should be validated by zod.
-		if (
-			setColorIssue !== 'warn' &&
-			setColorIssue !== 'fail' &&
-			setColorIssue !== 'rollback' &&
-			setColorIssue !== 'ignore'
-		) {
-			throw Ensure.unexpectedObject(
-				'Invalid "params.setColorIssue" value specified',
-				setColorIssue,
-			);
-		}
-	}
+	) {}
 
 	/**
 	 * Translate the AST by (x, y).
@@ -51,23 +28,17 @@ export default class SvgTranslate {
 	 * If an exception is thrown, the caller has to roll back the AST themselves to the original unmodified version.
 	 */
 	translate(ast: XastRoot) {
-        for (const child of ast.children) {
-            if (child.type === 'element' && child.name === 'svg') {
-                this.#rootSvg(child);
-            } else {
-                // Can ignore comments and instructions like <?xml ... ?>
-            }
-        }
+		for (const child of ast.children) {
+			if (child.type === 'element' && child.name === 'svg') {
+				this.#rootSvg(child);
+			} else {
+				// Can ignore comments and instructions like <?xml ... ?>
+			}
+		}
 	}
 
 	#rootSvg(svg: XastElement) {
-        this.previousColor = null;
 		this.#svg(svg);
-
-		// Ensure color set to root <svg> if not set to any other part of the <svg>
-		if (this.setColor && !this.previousColor) {
-			svg.attributes['fill'] = this.setColor;
-		}
 	}
 
 	#svg(svg: XastElement) {
@@ -153,8 +124,7 @@ export default class SvgTranslate {
 			attr === 'flood-color' ||
 			attr === 'lighting-color'
 		) {
-			this.#translateColor(node, attr);
-			return;
+			return; // Handled by recolor pass.
 		} else if (attr === 'class') {
 			if (this.removeClass) {
 				delete node.attributes[attr];
@@ -226,42 +196,6 @@ export default class SvgTranslate {
 		if (this.y === 0) return;
 		const newY = this.y + this.#unwrapNumberAttr(node, attr);
 		node.attributes[attr] = newY.toString();
-	}
-
-	#translateColor(node: XastElement, attr: string) {
-		if (!this.setColor) return;
-
-		const value = node.attributes[attr]?.trim()?.toLowerCase();
-		if (!value) {
-			delete node.attributes[attr];
-			return;
-		}
-
-		if (value === 'none') return;
-
-		if (attr === 'color' && this.setColor === 'currentColor') {
-			delete node.attributes[attr];
-			return;
-		}
-
-		const previousColor = this.previousColor;
-		this.previousColor ||= value;
-
-		const notifyColorsAreMixed = () => {
-			const message = `Expected single color/monotone <svg>, however multiple colors encountered in <svg> - previous color "${previousColor}", but just encountered <${node.name} ${attr}="${value}"> attribute with different color`;
-			if (this.setColorIssue === 'warn') {
-				console.warn(message);
-			} else if (this.setColorIssue === 'rollback') {
-				throw Ensure.unexpectedObject(message, node);
-			} else {
-				throw SvgTranslateError.fail(message);
-			}
-		};
-
-		if (previousColor && previousColor !== value && this.setColorIssue !== 'ignore') {
-			notifyColorsAreMixed();
-		}
-		node.attributes[attr] = this.setColor;
 	}
 
 	#unwrapAttr(node: XastElement, attr: string): string {

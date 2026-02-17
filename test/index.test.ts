@@ -390,5 +390,5 @@ function runPlugin(caseId: string, input: string, params: CropParams = {}): stri
 		plugins: [plugin],
 		js2svg: { pretty: true },
 	});
-    return result.data.trim().replaceAll(EOL, '\n');
+	return result.data.trim().replaceAll(EOL, '\n');
 }
