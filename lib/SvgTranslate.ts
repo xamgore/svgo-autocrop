@@ -7,14 +7,10 @@ import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
 export default class SvgTranslate {
-    /**
-     * @removeDeprecated If true, then delete <svg version/baseProfile> attributes. Also deletes other non-standard/not useful attributes like 'sketch:type'/'data-name'/etc.
-     */
     constructor(
         private x: number,
         private y: number,
         private multipassCount = 0,
-        private removeDeprecated = false,
     ) {}
 
     /**
@@ -50,10 +46,7 @@ export default class SvgTranslate {
             ) {
                 // Ignore
             } else if (attr === 'version' || attr === 'baseProfile') {
-                if (this.removeDeprecated) {
-                    // Remove deprecated if requested
-                    delete svg.attributes[attr];
-                }
+                // Handled by deprecated-cleanup pass.
             } else if (attr === 'x' || attr === 'y') {
                 const str = svg.attributes[attr];
                 if (!str || str === '0' || str === '0px') {
@@ -134,11 +127,7 @@ export default class SvgTranslate {
             attr === 'xmlns:sketch' ||
             attr.startsWith('sketch:')
         ) {
-            // Note: most common 'sketch:' attribute is 'sketch:type'.
-            if (this.removeDeprecated) {
-                // Remove deprecated/redundant if requested
-                delete node.attributes[attr];
-            }
+            // Handled by deprecated-cleanup pass.
             return;
         } else if (attr === 'transform') {
             // the attribute should have been already simplified and removed

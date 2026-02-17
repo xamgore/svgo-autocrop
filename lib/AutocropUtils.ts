@@ -6,6 +6,7 @@ import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
 import SvgRecolor, { RecolorParams } from './SvgRecolor';
 import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass';
+import SvgRemoveDeprecated, { RemoveDeprecatedParams } from './SvgRemoveDeprecated';
 import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle';
 import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
@@ -34,6 +35,7 @@ type PaddingFunction = (
 ) => void;
 
 export type CropParams = RemoveClassParams &
+    RemoveDeprecatedParams &
     RemoveStyleParams &
     RecolorParams & {
         /** Enable auto cropping. `true` by default. */
@@ -55,11 +57,6 @@ export type CropParams = RemoveClassParams &
          * Padding is usually better handled in CSS instead of in the SVG.
          */
         padding?: number | PaddingObject | PaddingFunction;
-        /**
-         * Removes deprecated & redundant root \<svg> attributes
-         * like "version", "baseProfile", "sketch:type", and "data-name".
-         */
-        removeDeprecated?: boolean;
         /**
          * Disables translating the SVG back to `(0, 0)` when `true`.
          * Also disables cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
@@ -183,13 +180,18 @@ function translate(
     multipassCount: number,
 ): boolean {
     const requiresClassPass = Boolean(params.removeClass);
+    const requiresDeprecatedPass = Boolean(params.removeDeprecated);
     const requiresStylePass = Boolean(params.removeStyle);
     const requiresRecolorPass = Boolean(params.setColor);
-    const requiresTranslatePass = vbNew.x !== 0 || vbNew.y !== 0 || params.removeDeprecated;
+    const requiresTranslatePass = vbNew.x !== 0 || vbNew.y !== 0;
 
     if (
         params.disableTranslate ||
-        (!requiresTranslatePass && !requiresClassPass && !requiresStylePass && !requiresRecolorPass)
+        (!requiresTranslatePass &&
+            !requiresClassPass &&
+            !requiresStylePass &&
+            !requiresDeprecatedPass &&
+            !requiresRecolorPass)
     ) {
         return true; // Nothing to do.
     }
@@ -197,9 +199,7 @@ function translate(
     try {
         if (requiresTranslatePass) {
             // Attempt to translate back to (0, 0)
-            new SvgTranslate(-vbNew.x, -vbNew.y, multipassCount, params.removeDeprecated).translate(
-                ast,
-            );
+            new SvgTranslate(-vbNew.x, -vbNew.y, multipassCount).translate(ast);
 
             vbNew.x = 0;
             vbNew.y = 0;
@@ -211,6 +211,10 @@ function translate(
 
         if (requiresStylePass) {
             new SvgRemoveStyle().remove(ast);
+        }
+
+        if (requiresDeprecatedPass) {
+            new SvgRemoveDeprecated().remove(ast);
         }
 
         if (requiresRecolorPass) {
