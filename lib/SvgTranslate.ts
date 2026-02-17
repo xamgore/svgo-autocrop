@@ -9,7 +9,6 @@ import { stringifyTree } from './SvgUtils';
 export default class SvgTranslate {
 	/**
 	 * @removeClass If true, then delete 'class' attribute.
-	 * @removeStyle If true, then delete 'style' and other styling attributes.
 	 * @removeDeprecated If true, then delete <svg version/baseProfile> attributes. Also deletes other non-standard/not useful attributes like 'sketch:type'/'data-name'/etc.
 	 */
 	constructor(
@@ -17,7 +16,6 @@ export default class SvgTranslate {
 		private y: number,
 		private multipassCount = 0,
 		private removeClass = false,
-		private removeStyle = false,
 		private removeDeprecated = false,
 	) {}
 
@@ -130,20 +128,8 @@ export default class SvgTranslate {
 				delete node.attributes[attr];
 			}
 			return;
-		} else if (attr === 'style' || attr === 'font-family') {
-			if (this.removeStyle) {
-				delete node.attributes[attr];
-			}
-			return;
-		} else if (attr === 'overflow') {
-			// https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/overflow
-			if (this.removeStyle) {
-				const value = node.attributes[attr];
-				if (!value || value === 'visible') {
-					// 'overflow=visible' is the default - so just remove this.
-					delete node.attributes[attr];
-				}
-			}
+		} else if (attr === 'style' || attr === 'font-family' || attr === 'overflow') {
+			// Handled by style-cleanup pass.
 			return;
 		} else if (
 			attr === 'enable-background' ||

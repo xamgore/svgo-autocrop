@@ -5,6 +5,7 @@ import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 import Ensure from './Ensure';
 import { getBounds } from './ImageUtils';
 import SvgRecolor, { RecolorParams } from './SvgRecolor';
+import SvgRemoveStyle from './SvgRemoveStyle';
 import SvgTranslate from './SvgTranslate';
 import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
@@ -56,7 +57,7 @@ export type CropParams = RecolorParams & {
 	 */
 	removeClass?: boolean;
 	/**
-	 * Removes all `style` and `font-family` attributes when `true`.
+	 * Removes all `style`, `font-family`, and `overflow="visible"` attributes when `true`.
 	 */
 	removeStyle?: boolean;
 	/**
@@ -186,18 +187,15 @@ function translate(
 	vbNew: ViewBox,
 	multipassCount: number,
 ): boolean {
-	if (params.disableTranslate) {
-		return true; // Nothing to do.
-	}
-	const x = vbNew.x;
-	const y = vbNew.y;
-	const removeClass = params.removeClass;
-	const removeStyle = params.removeStyle;
-	const removeDeprecated = params.removeDeprecated;
-	const requiresTranslatePass =
-		x !== 0 || y !== 0 || removeClass || removeStyle || removeDeprecated;
+	const requiresStylePass = Boolean(params.removeStyle);
 	const requiresRecolorPass = Boolean(params.setColor);
-	if (!requiresTranslatePass && !requiresRecolorPass) {
+	const requiresTranslatePass =
+		vbNew.x !== 0 || vbNew.y !== 0 || params.removeClass || params.removeDeprecated;
+
+	if (
+		params.disableTranslate ||
+		(!requiresTranslatePass && !requiresStylePass && !requiresRecolorPass)
+	) {
 		return true; // Nothing to do.
 	}
 
@@ -205,16 +203,19 @@ function translate(
 		if (requiresTranslatePass) {
 			// Attempt to translate back to (0, 0)
 			new SvgTranslate(
-				-x,
-				-y,
+				-vbNew.x,
+				-vbNew.y,
 				multipassCount,
-				removeClass,
-				removeStyle,
-				removeDeprecated,
+				params.removeClass,
+				params.removeDeprecated,
 			).translate(ast);
 
 			vbNew.x = 0;
 			vbNew.y = 0;
+		}
+
+		if (requiresStylePass) {
+			new SvgRemoveStyle().remove(ast);
 		}
 
 		if (requiresRecolorPass) {
@@ -228,7 +229,7 @@ function translate(
 			throw err; // Fail outright when this error is thrown.
 		} else if (!params.disableTranslateWarning) {
 			console.warn(
-				`Failed to translate <svg> by (${x}, ${y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
+				`Failed to translate <svg> by (${vbNew.x}, ${vbNew.y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
 					`Ideally you should update the code to fix this issue so translation can properly occur.\n` +
 					`The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`,
 				err,
