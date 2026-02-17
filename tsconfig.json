@@ -1,27 +1,27 @@
 {
-	"compilerOptions": {
-		"target": "ES2022",
-		"module": "CommonJS",
-		"moduleResolution": "Node",
-		"paths": {
-			"svgo-autocrop": ["./index.ts"]
-		},
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"noImplicitAny": true,
-		"resolveJsonModule": true,
-		"skipLibCheck": true,
-		"strict": true,
-		"strictNullChecks": true,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"noUncheckedIndexedAccess": true,
-		"strictBindCallApply": true,
-		"useUnknownInCatchVariables": true,
-		"forceConsistentCasingInFileNames": true,
-		"types": ["node", "jest"],
-		"noEmit": true
-	},
-	"include": ["**/*.ts"],
-	"exclude": ["node_modules", "dist"]
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "paths": {
+            "svgo-autocrop": ["./index.ts"]
+        },
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "noImplicitAny": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUncheckedIndexedAccess": true,
+        "strictBindCallApply": true,
+        "useUnknownInCatchVariables": true,
+        "forceConsistentCasingInFileNames": true,
+        "types": ["node", "jest"],
+        "noEmit": true
+    },
+    "include": ["**/*.ts"],
+    "exclude": ["node_modules", "dist"]
 }

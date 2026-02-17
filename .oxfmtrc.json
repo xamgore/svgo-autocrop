@@ -1,9 +1,9 @@
 {
-	"$schema": "./node_modules/oxfmt/configuration_schema.json",
-	"singleQuote": true,
-	"tabWidth": 4,
-	"useTabs": true,
-	"experimentalSortPackageJson": false,
-	"experimentalSortImports": {},
-	"ignorePatterns": ["node_modules/**", "coverage/**"]
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "singleQuote": true,
+    "tabWidth": 4,
+    "useTabs": false,
+    "experimentalSortPackageJson": false,
+    "experimentalSortImports": {},
+    "ignorePatterns": ["node_modules/**", "coverage/**"]
 }

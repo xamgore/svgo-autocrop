@@ -1,28 +1,28 @@
 {
-	"$schema": "./node_modules/oxlint/configuration_schema.json",
-	"categories": {
-		"correctness": "error",
-		"suspicious": "error",
-		"pedantic": "warn"
-	},
-	"env": {
-		"builtin": true
-	},
-	"ignorePatterns": ["node_modules/**", "coverage/**", "scripts/**"],
-	"plugins": ["eslint", "unicorn", "typescript", "oxc", "import", "node", "promise", "jest"],
-	"rules": {
-		"max-lines": "off",
-		"max-lines-per-function": "off",
-		"no-array-sort": "off",
-		"no-inline-comments": "off",
-		"no-negated-condition": "off",
-		"no-warning-comments": "off",
-		"prefer-const": "error",
-		"sort-vars": "off",
-		"typescript/no-any": "error",
-		"typescript/no-extraneous-class": "off",
-		"typescript/strict-boolean-expressions": "off",
-		"typescript/prefer-nullish-coalescing": "off",
-		"unicorn/no-static-only-class": "off"
-	}
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "categories": {
+        "correctness": "error",
+        "suspicious": "error",
+        "pedantic": "warn"
+    },
+    "env": {
+        "builtin": true
+    },
+    "ignorePatterns": ["node_modules/**", "coverage/**", "scripts/**"],
+    "plugins": ["eslint", "unicorn", "typescript", "oxc", "import", "node", "promise", "jest"],
+    "rules": {
+        "max-lines": "off",
+        "max-lines-per-function": "off",
+        "no-array-sort": "off",
+        "no-inline-comments": "off",
+        "no-negated-condition": "off",
+        "no-warning-comments": "off",
+        "prefer-const": "error",
+        "sort-vars": "off",
+        "typescript/no-any": "error",
+        "typescript/no-extraneous-class": "off",
+        "typescript/strict-boolean-expressions": "off",
+        "typescript/prefer-nullish-coalescing": "off",
+        "unicorn/no-static-only-class": "off"
+    }
 }

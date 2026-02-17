@@ -1,107 +1,107 @@
 {
-	"name": "svgo-autocrop",
-	"version": "1.1.2",
-	"packageManager": "pnpm@10.20.0",
-	"description": "SVGO plugin that reduces viewBox to minimum possible size so no wasted transparent space around svg",
-	"main": "index.ts",
-	"types": "index.d.ts",
-	"keywords": [
-		"svgo",
-		"svg",
-		"optimize",
-		"minify",
-		"autocrop"
-	],
-	"author": {
-		"name": "Igor Strebz",
-		"url": "https://github.com/xamgore"
-	},
-	"contributors": [
-		{
-			"name": "Glennos",
-			"url": "https://github.com/glennosss"
-		}
-	],
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/xamgore/svgo-autocrop.git"
-	},
-	"homepage": "https://github.com/xamgore/svgo-autocrop/",
-	"bugs": {
-		"url": "https://github.com/xamgore/svgo-autocrop/issues"
-	},
-	"scripts": {
-		"fmt": "oxfmt .",
-		"fmt:check": "oxfmt --check .",
-		"lint": "oxlint --type-aware --type-check --format=stylish .",
-		"lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
-		"report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
-		"jsr:check": "pnpm dlx jsr publish --dry-run",
-		"test": "jest",
-		"test:watch": "jest --watch"
-	},
-	"license": "MIT",
-	"dependencies": {
-		"@resvg/resvg-js": "2.6.2",
-		"svg-pathdata": "8.0.0",
-		"svgo": "4.0.0"
-	},
-	"devDependencies": {
-		"@swc-node/register": "^1.11.1",
-		"@swc/core": "^1.11.22",
-		"@swc/jest": "^0.2.39",
-		"@types/jest": "^30.0.0",
-		"@types/node": "^24.5.2",
-		"@typescript/native-preview": "7.0.0-dev.20260215.1",
-		"jest": "30.2.0",
-		"oxfmt": "^0.32.0",
-		"oxlint": "^1.47.0",
-		"oxlint-tsgolint": "^0.13.0",
-		"typescript": "6.0.0-dev.20260215"
-	},
-	"jest": {
-		"testEnvironment": "node",
-		"transform": {
-			"^.+\\.ts$": [
-				"@swc/jest",
-				{
-					"jsc": {
-						"target": "es2022",
-						"parser": {
-							"syntax": "typescript"
-						}
-					},
-					"module": {
-						"type": "commonjs"
-					}
-				}
-			],
-			"^.+\\.m?js$": [
-				"@swc/jest",
-				{
-					"jsc": {
-						"target": "es2022",
-						"parser": {
-							"syntax": "ecmascript"
-						}
-					},
-					"module": {
-						"type": "commonjs"
-					}
-				}
-			]
-		},
-		"transformIgnorePatterns": [
-			"/node_modules/(?!.*svg-pathdata)"
-		],
-		"testMatch": [
-			"**/*.test.ts"
-		],
-		"moduleFileExtensions": [
-			"ts",
-			"js",
-			"json",
-			"node"
-		]
-	}
+    "name": "svgo-autocrop",
+    "version": "1.1.2",
+    "packageManager": "pnpm@10.20.0",
+    "description": "SVGO plugin that reduces viewBox to minimum possible size so no wasted transparent space around svg",
+    "main": "index.ts",
+    "types": "index.d.ts",
+    "keywords": [
+        "svgo",
+        "svg",
+        "optimize",
+        "minify",
+        "autocrop"
+    ],
+    "author": {
+        "name": "Igor Strebz",
+        "url": "https://github.com/xamgore"
+    },
+    "contributors": [
+        {
+            "name": "Glennos",
+            "url": "https://github.com/glennosss"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xamgore/svgo-autocrop.git"
+    },
+    "homepage": "https://github.com/xamgore/svgo-autocrop/",
+    "bugs": {
+        "url": "https://github.com/xamgore/svgo-autocrop/issues"
+    },
+    "scripts": {
+        "fmt": "oxfmt .",
+        "fmt:check": "oxfmt --check .",
+        "lint": "oxlint --type-aware --type-check --format=stylish .",
+        "lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
+        "report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
+        "jsr:check": "pnpm dlx jsr publish --dry-run",
+        "test": "jest",
+        "test:watch": "jest --watch"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "@resvg/resvg-js": "2.6.2",
+        "svg-pathdata": "8.0.0",
+        "svgo": "4.0.0"
+    },
+    "devDependencies": {
+        "@swc-node/register": "^1.11.1",
+        "@swc/core": "^1.11.22",
+        "@swc/jest": "^0.2.39",
+        "@types/jest": "^30.0.0",
+        "@types/node": "^24.5.2",
+        "@typescript/native-preview": "7.0.0-dev.20260215.1",
+        "jest": "30.2.0",
+        "oxfmt": "^0.32.0",
+        "oxlint": "^1.47.0",
+        "oxlint-tsgolint": "^0.13.0",
+        "typescript": "6.0.0-dev.20260215"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "transform": {
+            "^.+\\.ts$": [
+                "@swc/jest",
+                {
+                    "jsc": {
+                        "target": "es2022",
+                        "parser": {
+                            "syntax": "typescript"
+                        }
+                    },
+                    "module": {
+                        "type": "commonjs"
+                    }
+                }
+            ],
+            "^.+\\.m?js$": [
+                "@swc/jest",
+                {
+                    "jsc": {
+                        "target": "es2022",
+                        "parser": {
+                            "syntax": "ecmascript"
+                        }
+                    },
+                    "module": {
+                        "type": "commonjs"
+                    }
+                }
+            ]
+        },
+        "transformIgnorePatterns": [
+            "/node_modules/(?!.*svg-pathdata)"
+        ],
+        "testMatch": [
+            "**/*.test.ts"
+        ],
+        "moduleFileExtensions": [
+            "ts",
+            "js",
+            "json",
+            "node"
+        ]
+    }
 }

@@ -6,19 +6,19 @@ import SvgTranslateError from './SvgTranslateError';
 export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
 
 export type RecolorParams = {
-	/**
-	 * Replaces all colors with this value when set (usually `currentColor`).
-	 * When multiple colors are encountered, behavior is controlled by `setColorIssue`.
-	 */
-	setColor?: string;
-	/**
-	 * Controls what happens when `setColor` is set and multiple colors are found:
-	 * - `warn`: log a warning
-	 * - `fail`: throw an error and stop processing
-	 * - `rollback`: undo recoloring
-	 * - `ignore`: force all colors to `setColor` with no warning/error
-	 */
-	setColorIssue?: ColorIssueReaction;
+    /**
+     * Replaces all colors with this value when set (usually `currentColor`).
+     * When multiple colors are encountered, behavior is controlled by `setColorIssue`.
+     */
+    setColor?: string;
+    /**
+     * Controls what happens when `setColor` is set and multiple colors are found:
+     * - `warn`: log a warning
+     * - `fail`: throw an error and stop processing
+     * - `rollback`: undo recoloring
+     * - `ignore`: force all colors to `setColor` with no warning/error
+     */
+    setColorIssue?: ColorIssueReaction;
 };
 
 /**
@@ -42,93 +42,93 @@ export type RecolorParams = {
  */
 export default class SvgRecolor {
     /** @see https://www.w3.org/TR/SVG11/single-page.html#types-DataTypeColor */
-	static COLOR_ATTRIBUTES = new Set([
+    static COLOR_ATTRIBUTES = new Set([
         'color',
         'fill',
         'flood-color',
         'lighting-color',
         'stop-color',
         'stroke',
-	]);
+    ]);
 
-	/**
-	 * The first color being set for any of the color attributes in the SVG.
-	 * If another color is encountered during tree traversal, that's an issue.
-	 * Stored in lowercase.
-	 */
-	private firstSeenColor: string | null = null;
+    /**
+     * The first color being set for any of the color attributes in the SVG.
+     * If another color is encountered during tree traversal, that's an issue.
+     * Stored in lowercase.
+     */
+    private firstSeenColor: string | null = null;
 
-	constructor(
-		private newColor: string,
-		private onColorIssue: ColorIssueReaction = 'warn',
-	) {
-		// todo: zod validation
-		if (!['warn', 'fail', 'rollback', 'ignore'].includes(onColorIssue)) {
-			throw Ensure.unexpectedObject(
-				'Invalid "params.setColorIssue" value specified',
-				onColorIssue,
-			);
-		}
-	}
+    constructor(
+        private newColor: string,
+        private onColorIssue: ColorIssueReaction = 'warn',
+    ) {
+        // todo: zod validation
+        if (!['warn', 'fail', 'rollback', 'ignore'].includes(onColorIssue)) {
+            throw Ensure.unexpectedObject(
+                'Invalid "params.setColorIssue" value specified',
+                onColorIssue,
+            );
+        }
+    }
 
     recolor(ast: XastRoot): void {
-		for (const node of ast.children) {
-			if (node.type === 'element' && node.name === 'svg') {
-				this.firstSeenColor = null;
-				this.visitElement(node);
-				// if the SVG has no explicit color attributes, it falls back to the "initial" colors.
-				// that’s why we set `fill` on the root <svg> element.
-				if (!this.firstSeenColor) {
-					node.attributes.fill = this.newColor;
-				}
-			}
-		}
-	}
+        for (const node of ast.children) {
+            if (node.type === 'element' && node.name === 'svg') {
+                this.firstSeenColor = null;
+                this.visitElement(node);
+                // if the SVG has no explicit color attributes, it falls back to the "initial" colors.
+                // that’s why we set `fill` on the root <svg> element.
+                if (!this.firstSeenColor) {
+                    node.attributes.fill = this.newColor;
+                }
+            }
+        }
+    }
 
-	visitElement(node: XastElement) {
-		for (const attr in node.attributes) {
-			if (SvgRecolor.COLOR_ATTRIBUTES.has(attr)) {
-				this.visitColorAttribute(node, attr);
-			}
-		}
+    visitElement(node: XastElement) {
+        for (const attr in node.attributes) {
+            if (SvgRecolor.COLOR_ATTRIBUTES.has(attr)) {
+                this.visitColorAttribute(node, attr);
+            }
+        }
 
-		for (const child of node.children) {
-			if (child.type === 'element') {
-				this.visitElement(child);
-			}
-		}
-	}
+        for (const child of node.children) {
+            if (child.type === 'element') {
+                this.visitElement(child);
+            }
+        }
+    }
 
-	visitColorAttribute(node: XastElement, attr: string) {
-		const value = node.attributes[attr]?.trim()?.toLowerCase();
+    visitColorAttribute(node: XastElement, attr: string) {
+        const value = node.attributes[attr]?.trim()?.toLowerCase();
 
-		// "none" = "invisible", can't touch it.
-		if (value === 'none') return;
+        // "none" = "invisible", can't touch it.
+        if (value === 'none') return;
 
-		// can be safely removed because:
-		// – an empty attribute is invalid, and is handled as if the attribute wasn’t specified
-		// – `color="currentColor" is a tautology and effectively no-op for rendering.
-		if (!value || (attr === 'color' && this.newColor === 'currentColor')) {
-			delete node.attributes[attr];
-			return;
-		}
+        // can be safely removed because:
+        // – an empty attribute is invalid, and is handled as if the attribute wasn’t specified
+        // – `color="currentColor" is a tautology and effectively no-op for rendering.
+        if (!value || (attr === 'color' && this.newColor === 'currentColor')) {
+            delete node.attributes[attr];
+            return;
+        }
 
-		this.firstSeenColor ??= value;
-		node.attributes[attr] = this.newColor;
+        this.firstSeenColor ??= value;
+        node.attributes[attr] = this.newColor;
 
-		if (this.firstSeenColor !== value && this.onColorIssue !== 'ignore') {
-			this.notifyColorsAreMixed(node);
-		}
-	}
+        if (this.firstSeenColor !== value && this.onColorIssue !== 'ignore') {
+            this.notifyColorsAreMixed(node);
+        }
+    }
 
-	notifyColorsAreMixed(node: XastElement) {
-		const message = 'Expected a monochrome (single-color) SVG, but found multiple colors.';
-		if (this.onColorIssue === 'warn') {
-			console.warn(message);
-		} else if (this.onColorIssue === 'rollback') {
-			throw Ensure.unexpectedObject(message, node); // todo: why don't we throw rollback here?
-		} else {
-			throw SvgTranslateError.fail(message);
-		}
-	}
+    notifyColorsAreMixed(node: XastElement) {
+        const message = 'Expected a monochrome (single-color) SVG, but found multiple colors.';
+        if (this.onColorIssue === 'warn') {
+            console.warn(message);
+        } else if (this.onColorIssue === 'rollback') {
+            throw Ensure.unexpectedObject(message, node); // todo: why don't we throw rollback here?
+        } else {
+            throw SvgTranslateError.fail(message);
+        }
+    }
 }

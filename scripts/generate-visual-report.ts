@@ -9,157 +9,157 @@ const OUTPUT_FILE = path.join(ROOT, 'test', 'visual-report.html');
 const PREVIEW_SIZE = 60;
 
 type VisualReportCase = {
-	caseId: string;
-	name: string;
-	inputSvg: string;
-	outputSvg: string | null;
-	params: Record<string, unknown>;
+    caseId: string;
+    name: string;
+    inputSvg: string;
+    outputSvg: string | null;
+    params: Record<string, unknown>;
 };
 
 type VisualReportCaseWithOutput = Omit<VisualReportCase, 'outputSvg'> & {
-	outputSvg: string;
+    outputSvg: string;
 };
 
 type OptimizeOptionsLike = {
-	path?: string;
-	plugins?: Array<{
-		name?: string;
-		params?: Record<string, unknown>;
-	}>;
+    path?: string;
+    plugins?: Array<{
+        name?: string;
+        params?: Record<string, unknown>;
+    }>;
 };
 
 function main() {
-	const cases = collectCasesFromTests().map(
-		(item): VisualReportCaseWithOutput => ({
-			...item,
-			outputSvg:
-				item.outputSvg ||
-				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
-		}),
-	);
-	const html = renderHtml(cases);
-	fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
-	console.log(`Generated ${path.relative(ROOT, OUTPUT_FILE)} with ${cases.length} cases`);
+    const cases = collectCasesFromTests().map(
+        (item): VisualReportCaseWithOutput => ({
+            ...item,
+            outputSvg:
+                item.outputSvg ||
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>',
+        }),
+    );
+    const html = renderHtml(cases);
+    fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
+    console.log(`Generated ${path.relative(ROOT, OUTPUT_FILE)} with ${cases.length} cases`);
 }
 
 function collectCasesFromTests(): VisualReportCase[] {
-	const snapshotMap = readSnapshotOutputs();
-	const cases: VisualReportCase[] = [];
-	let currentTestName: string | null = null;
-	const globalContext = globalThis as any;
-	const previousIt = globalContext.it;
-	const previousExpect = globalContext.expect;
+    const snapshotMap = readSnapshotOutputs();
+    const cases: VisualReportCase[] = [];
+    let currentTestName: string | null = null;
+    const globalContext = globalThis as any;
+    const previousIt = globalContext.it;
+    const previousExpect = globalContext.expect;
 
-	const moduleInternal = Module as any;
-	const originalLoad = moduleInternal._load;
+    const moduleInternal = Module as any;
+    const originalLoad = moduleInternal._load;
 
-	function it(name: string, fn: () => void) {
-		currentTestName = name;
-		try {
-			fn();
-		} finally {
-			currentTestName = null;
-		}
-	}
+    function it(name: string, fn: () => void) {
+        currentTestName = name;
+        try {
+            fn();
+        } finally {
+            currentTestName = null;
+        }
+    }
 
-	function expect() {
-		return {
-			toMatchSnapshot() {},
-		};
-	}
+    function expect() {
+        return {
+            toMatchSnapshot() {},
+        };
+    }
 
-	moduleInternal._load = function patchedLoad(request: string, parent: unknown, isMain: boolean) {
-		if (request === '@jest/globals') {
-			return { it, expect };
-		}
-		if (request === 'svgo') {
-			return {
-				optimize(input: unknown, options?: OptimizeOptionsLike) {
-					const runPath = String(options?.path ?? '');
-					const caseIdMatch = /case-(.+)\.svg\.run1$/.exec(runPath);
-					const caseId = caseIdMatch ? caseIdMatch[1] : String(cases.length + 1);
-					const name = currentTestName || `Case ${caseId}`;
-					const entry: VisualReportCase = {
-						caseId,
-						name: name,
-						inputSvg: normalizeSvg(input),
-						outputSvg: snapshotMap.get(name) || null,
-						params: getParams(options),
-					};
-					cases.push(entry);
-					return { data: input };
-				},
-			};
-		}
-		return originalLoad.call(this, request, parent, isMain);
-	};
+    moduleInternal._load = function patchedLoad(request: string, parent: unknown, isMain: boolean) {
+        if (request === '@jest/globals') {
+            return { it, expect };
+        }
+        if (request === 'svgo') {
+            return {
+                optimize(input: unknown, options?: OptimizeOptionsLike) {
+                    const runPath = String(options?.path ?? '');
+                    const caseIdMatch = /case-(.+)\.svg\.run1$/.exec(runPath);
+                    const caseId = caseIdMatch ? caseIdMatch[1] : String(cases.length + 1);
+                    const name = currentTestName || `Case ${caseId}`;
+                    const entry: VisualReportCase = {
+                        caseId,
+                        name: name,
+                        inputSvg: normalizeSvg(input),
+                        outputSvg: snapshotMap.get(name) || null,
+                        params: getParams(options),
+                    };
+                    cases.push(entry);
+                    return { data: input };
+                },
+            };
+        }
+        return originalLoad.call(this, request, parent, isMain);
+    };
 
-	globalContext.it = it;
-	globalContext.expect = expect;
-	const testModulePath = require.resolve(TEST_FILE);
-	delete require.cache[testModulePath];
-	try {
-		require(testModulePath);
-	} finally {
-		moduleInternal._load = originalLoad;
-		if (typeof previousIt === 'undefined') {
-			delete globalContext.it;
-		} else {
-			globalContext.it = previousIt;
-		}
-		if (typeof previousExpect === 'undefined') {
-			delete globalContext.expect;
-		} else {
-			globalContext.expect = previousExpect;
-		}
-	}
+    globalContext.it = it;
+    globalContext.expect = expect;
+    const testModulePath = require.resolve(TEST_FILE);
+    delete require.cache[testModulePath];
+    try {
+        require(testModulePath);
+    } finally {
+        moduleInternal._load = originalLoad;
+        if (typeof previousIt === 'undefined') {
+            delete globalContext.it;
+        } else {
+            globalContext.it = previousIt;
+        }
+        if (typeof previousExpect === 'undefined') {
+            delete globalContext.expect;
+        } else {
+            globalContext.expect = previousExpect;
+        }
+    }
 
-	return cases.sort((a, b) => compareCaseIds(a.caseId, b.caseId));
+    return cases.sort((a, b) => compareCaseIds(a.caseId, b.caseId));
 }
 
 function readSnapshotOutputs() {
-	const snapshotModulePath = require.resolve(SNAPSHOT_FILE);
-	delete require.cache[snapshotModulePath];
-	const snapshots = require(snapshotModulePath);
-	const map = new Map<string, string>();
-	for (const [key, value] of Object.entries(snapshots)) {
-		const name = key.replace(/\s+1$/, '');
-		map.set(name, unwrapSnapshotValue(value));
-	}
-	return map;
+    const snapshotModulePath = require.resolve(SNAPSHOT_FILE);
+    delete require.cache[snapshotModulePath];
+    const snapshots = require(snapshotModulePath);
+    const map = new Map<string, string>();
+    for (const [key, value] of Object.entries(snapshots)) {
+        const name = key.replace(/\s+1$/, '');
+        map.set(name, unwrapSnapshotValue(value));
+    }
+    return map;
 }
 
 function unwrapSnapshotValue(value: unknown): string {
-	let text = String(value).trim();
-	if (text.startsWith('"') && text.endsWith('"') && text.length >= 2) {
-		text = text.slice(1, -1);
-	}
-	return text.trim();
+    let text = String(value).trim();
+    if (text.startsWith('"') && text.endsWith('"') && text.length >= 2) {
+        text = text.slice(1, -1);
+    }
+    return text.trim();
 }
 
 function getParams(options?: OptimizeOptionsLike): Record<string, unknown> {
-	const plugins = options?.plugins ?? [];
-	const plugin = plugins.find((item) => item && item.name === 'autocrop');
-	return plugin?.params ?? {};
+    const plugins = options?.plugins ?? [];
+    const plugin = plugins.find((item) => item && item.name === 'autocrop');
+    return plugin?.params ?? {};
 }
 
 function normalizeSvg(svg: unknown): string {
-	return String(svg).trim();
+    return String(svg).trim();
 }
 
 function compareCaseIds(a: string, b: string): number {
-	const aNum = Number(a);
-	const bNum = Number(b);
-	if (Number.isFinite(aNum) && Number.isFinite(bNum)) {
-		return aNum - bNum;
-	}
-	return String(a).localeCompare(String(b));
+    const aNum = Number(a);
+    const bNum = Number(b);
+    if (Number.isFinite(aNum) && Number.isFinite(bNum)) {
+        return aNum - bNum;
+    }
+    return String(a).localeCompare(String(b));
 }
 
 function renderHtml(cases: VisualReportCaseWithOutput[]): string {
-	const rows = cases.map((item) => renderRow(item)).join('\n');
-	const generatedAt = new Date().toISOString();
-	return `<!doctype html>
+    const rows = cases.map((item) => renderRow(item)).join('\n');
+    const generatedAt = new Date().toISOString();
+    return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -320,10 +320,10 @@ ${rows}
 }
 
 function renderRow(item: VisualReportCaseWithOutput): string {
-	const paramsJson = JSON.stringify(item.params, null, 2);
-	const inputPreviewSvg = getRenderableSvg(item.inputSvg);
-	const outputPreviewSvg = getRenderableSvg(item.outputSvg);
-	return `          <tr>
+    const paramsJson = JSON.stringify(item.params, null, 2);
+    const inputPreviewSvg = getRenderableSvg(item.inputSvg);
+    const outputPreviewSvg = getRenderableSvg(item.outputSvg);
+    return `          <tr>
             <td class="name">${escapeHtml(item.name)}<div class="case-id">case-${escapeHtml(item.caseId)}</div></td>
             <td class="preview-cell">
               <div class="preview">${inputPreviewSvg}</div>
@@ -338,17 +338,17 @@ function renderRow(item: VisualReportCaseWithOutput): string {
 }
 
 function getRenderableSvg(svg: string): string {
-	const match = /<svg\b[\s\S]*<\/svg>/i.exec(svg);
-	return match ? match[0] : svg;
+    const match = /<svg\b[\s\S]*<\/svg>/i.exec(svg);
+    return match ? match[0] : svg;
 }
 
 function escapeHtml(text: string): string {
-	return String(text)
-		.replaceAll('&', '&amp;')
-		.replaceAll('<', '&lt;')
-		.replaceAll('>', '&gt;')
-		.replaceAll('"', '&quot;')
-		.replaceAll("'", '&#39;');
+    return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
 }
 
 main();

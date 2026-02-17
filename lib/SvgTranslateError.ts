@@ -6,19 +6,19 @@
  * If any other exception is thrown when 'SvgTranslate.translate()' is being called, the change is just rolled back.
  */
 export default class SvgTranslateError extends Error {
-	readonly type: string;
+    readonly type: string;
 
-	// Don't use this constructor - use static creator methods below.
-	constructor(message: string, type: string) {
-		super(message);
-		this.type = type;
-	}
+    // Don't use this constructor - use static creator methods below.
+    constructor(message: string, type: string) {
+        super(message);
+        this.type = type;
+    }
 
-	static fail(message: string) {
-		return new SvgTranslateError(message, 'fail');
-	}
+    static fail(message: string) {
+        return new SvgTranslateError(message, 'fail');
+    }
 
-	static silentRollback(message: string) {
-		return new SvgTranslateError(message, 'silentRollback');
-	}
+    static silentRollback(message: string) {
+        return new SvgTranslateError(message, 'silentRollback');
+    }
 }
