@@ -1,10 +1,4 @@
-import {
-    type CustomPlugin,
-    optimize,
-    querySelectorAll,
-    type XastParent,
-    type XastRoot,
-} from 'svgo';
+import { type CustomPlugin, optimize, querySelectorAll, type XastElement, type XastParent, type XastRoot, } from 'svgo';
 
 /**
  * Parse the SVG/XML string provided - and return the javascript in-memory representation.
@@ -48,16 +42,24 @@ export function stringifyTree(ast: XastParent): string {
     }).data;
 }
 
-export function removeAttributesBySelector(ast: XastRoot, selector: string, attributes: string[]) {
-    const nodes = querySelectorAll(ast, selector);
+export function removeAttributesBySelector(
+    ast: XastRoot,
+    selector: string | ((node: XastElement) => boolean),
+    attributes: string[] | ((attr: string, value: string) => boolean),
+) {
+    const nodes = querySelectorAll(ast, selector as unknown as string);
     for (const node of nodes) {
-        if (node.type === 'element') {
-            if (Array.isArray(attributes)) {
-                for (const name of attributes) {
+        if (node.type !== 'element') continue;
+
+        if (typeof attributes === 'function') {
+            for (const [name, value] of Object.entries(node.attributes)) {
+                if (attributes(name, value)) {
                     delete node.attributes[name];
                 }
-            } else {
-                delete node.attributes[attributes];
+            }
+        } else {
+            for (const name of attributes) {
+                delete node.attributes[name];
             }
         }
     }

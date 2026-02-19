@@ -1,20 +1,13 @@
 import type { XastElement, XastRoot } from 'svgo';
 
+import { removeAttributesBySelector } from './SvgUtils';
+
 export type RemoveDeprecatedParams = {
     /**
      * Removes deprecated and exporter-specific metadata attributes when `true`.
      */
     removeDeprecated?: boolean;
 };
-
-const DEPRECATED_ATTRIBUTES = new Set([
-    'version',
-    'baseProfile',
-    'enable-background',
-    'data-name',
-    'xml:space',
-    'xmlns:sketch',
-]);
 
 /**
  * Removes legacy/export-tool metadata that does not help icon rendering in modern pipelines.
@@ -33,24 +26,20 @@ const DEPRECATED_ATTRIBUTES = new Set([
  */
 export default class SvgRemoveDeprecated {
     remove(ast: XastRoot): void {
-        for (const node of ast.children) {
-            if (node.type === 'element' && node.name === 'svg') {
-                this.visitElement(node);
-            }
-        }
-    }
+        removeAttributesBySelector(ast, `svg[version]`, ['version']);
+        removeAttributesBySelector(ast, `svg[baseProfile]`, ['baseProfile']);
 
-    visitElement(node: XastElement): void {
-        for (const attr in node.attributes) {
-            if (DEPRECATED_ATTRIBUTES.has(attr) || attr.startsWith('sketch:')) {
-                delete node.attributes[attr];
-            }
-        }
+        removeAttributesBySelector(ast, 'svg [enable-background]', ['enable-background']);
+        removeAttributesBySelector(ast, 'svg [data-name]', ['data-name']);
 
-        for (const child of node.children) {
-            if (child.type === 'element') {
-                this.visitElement(child);
-            }
-        }
+        removeAttributesBySelector(ast, '[xml\\:space]', ['xml:space']);
+        removeAttributesBySelector(ast, '[xmlns\\:sketch]', ['xmlns:sketch']);
+
+        const hasAttrNamePrefix = (prefix: string) => (el: XastElement) =>
+            Object.keys(el.attributes ?? {}).some((name) => name.startsWith(prefix));
+
+        removeAttributesBySelector(ast, hasAttrNamePrefix('sketch:'), (attr) =>
+            attr.startsWith('sketch:'),
+        );
     }
 }
