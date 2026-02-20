@@ -1,7 +1,7 @@
 import type { XastChild, XastElement, XastRoot } from 'svgo';
 
-import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
-import Ensure from './Ensure';
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
+import Ensure from './Ensure.ts';
 
 export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
 

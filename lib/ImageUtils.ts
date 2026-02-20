@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 
 import { Resvg } from '@resvg/resvg-js';
 
-import { ViewBox } from './AutocropUtils';
+import { ViewBox } from './AutocropUtils.ts';
 
 const CH = 4;
 const ALPHA_CH = 3;

@@ -1,6 +1,6 @@
 import type { XastRoot } from 'svgo';
 
-import { removeAttributesBySelector } from './SvgUtils';
+import { removeAttributesBySelector } from './SvgUtils.ts';
 
 export type RemoveStyleParams = {
     /**

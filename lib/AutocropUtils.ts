@@ -2,15 +2,15 @@
 
 import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 
-import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
-import Ensure from './Ensure';
-import { getVisiblePixelBounds } from './ImageUtils';
-import SvgRecolor, { RecolorParams } from './SvgRecolor';
-import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass';
-import SvgRemoveDeprecated, { RemoveDeprecatedParams } from './SvgRemoveDeprecated';
-import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle';
-import SvgTranslate from './SvgTranslate';
-import { stringifyTree } from './SvgUtils';
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
+import Ensure from './Ensure.ts';
+import { getVisiblePixelBounds } from './ImageUtils.ts';
+import SvgRecolor, { RecolorParams } from './SvgRecolor.ts';
+import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass.ts';
+import SvgRemoveDeprecated, { RemoveDeprecatedParams } from './SvgRemoveDeprecated.ts';
+import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle.ts';
+import SvgTranslate from './SvgTranslate.ts';
+import { stringifyTree } from './SvgUtils.ts';
 
 export type ViewBox = {
     x: number;

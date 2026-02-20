@@ -1,7 +1,7 @@
 import type { CustomPlugin } from 'svgo';
 
-import type { CropParams } from './lib/AutocropUtils';
-import { plugin } from './lib/AutocropUtils';
+import type { CropParams } from './lib/AutocropUtils.ts';
+import { plugin } from './lib/AutocropUtils.ts';
 
 const autocrop: CustomPlugin<CropParams> = {
     name: 'autocrop',

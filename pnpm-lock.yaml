@@ -12,13 +12,13 @@ importers:
   .:
     dependencies:
       '@resvg/resvg-js':
-        specifier: 2.6.2
+        specifier: ^2.6.2
         version: 2.6.2
       svg-pathdata:
-        specifier: 8.0.0
+        specifier: ^8.0.0
         version: 8.0.0
       svgo:
-        specifier: 4.0.0
+        specifier: ^4.0.0
         version: 4.0.0
     devDependencies:
       '@swc-node/register':

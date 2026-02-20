@@ -1,9 +1,9 @@
 import { SVGPathData } from 'svg-pathdata';
 import type { XastChild, XastElement, XastRoot } from 'svgo';
 
-import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
-import Ensure from './Ensure';
-import { stringifyTree } from './SvgUtils';
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
+import Ensure from './Ensure.ts';
+import { stringifyTree } from './SvgUtils.ts';
 
 export default class SvgTranslate {
     constructor(
