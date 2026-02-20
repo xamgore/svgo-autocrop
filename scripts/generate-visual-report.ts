@@ -1,6 +1,9 @@
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import Module from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(__dirname, '..');
 const TEST_FILE = path.join(ROOT, 'test', 'index.test.ts');
@@ -40,6 +43,35 @@ function main() {
     const html = renderHtml(cases);
     fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
     console.log(`Generated ${path.relative(ROOT, OUTPUT_FILE)} with ${cases.length} cases`);
+    openReportInBrowser(OUTPUT_FILE);
+}
+
+function openReportInBrowser(reportPath: string): void {
+    const reportUrl = pathToFileURL(reportPath).href;
+    const platform = os.platform();
+    let command: string;
+    let args: string[];
+
+    if (platform === 'darwin') {
+        command = 'open';
+        args = [reportUrl];
+    } else if (platform === 'win32') {
+        command = 'cmd';
+        args = ['/c', 'start', '', reportUrl];
+    } else {
+        command = 'xdg-open';
+        args = [reportUrl];
+    }
+
+    const child = spawn(command, args, {
+        detached: true,
+        stdio: 'ignore',
+    });
+
+    child.on('error', (error) => {
+        console.warn(`Unable to open report in browser: ${String(error)}`);
+    });
+    child.unref();
 }
 
 function collectCasesFromTests(): VisualReportCase[] {
