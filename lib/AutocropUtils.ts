@@ -2,17 +2,17 @@
 
 import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
 import Ensure from './Ensure';
-import { getBounds } from './ImageUtils';
+import { getVisiblePixelBounds } from './ImageUtils';
 import SvgRecolor, { RecolorParams } from './SvgRecolor';
 import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass';
 import SvgRemoveDeprecated, { RemoveDeprecatedParams } from './SvgRemoveDeprecated';
 import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle';
 import SvgTranslate from './SvgTranslate';
-import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
-type ViewBox = {
+export type ViewBox = {
     x: number;
     y: number;
     width: number;
@@ -59,81 +59,104 @@ export type CropParams = RemoveClassParams &
         padding?: number | PaddingObject | PaddingFunction;
         /**
          * Disables translating the SVG back to `(0, 0)` when `true`.
-         * Also disables cleanup (`removeClass`, `removeStyle`, `removeDeprecated`, `setColor`).
          */
         disableTranslate?: boolean;
         /**
-         * Suppresses warnings when `true` if translation/cleanup cannot be applied.
+         * Suppresses warnings when `true` if translation cannot be applied.
          */
         disableTranslateWarning?: boolean;
     };
 
 export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo): void {
-    params = { ...params };
-    try {
-        // Get root <svg> node and attributes
-        let svgNode = unwrapSingleSvgElement(ast);
-        let attrs = svgNode.attributes;
-        const dimensionsPresent = Boolean(attrs.width || attrs.height);
+    params.disableTranslateWarning ??= true;
 
-        const vb = attrs.viewBox
-            ? parseViewBoxAttr(attrs.viewBox)
-            : deriveViewBoxFromDimensions(attrs);
+    if (params.removeClass) {
+        new SvgRemoveClass().remove(ast);
+    }
+    if (params.removeStyle) {
+        new SvgRemoveStyle().remove(ast);
+    }
+    if (params.removeDeprecated) {
+        new SvgRemoveDeprecated().remove(ast);
+    }
 
-        // Ensure width/height set (need svg to be fixed size rather than scaling to screen)
-        attrs.width = `${vb.width}`;
-        attrs.height = `${vb.height}`;
-        const svg = stringifyTree(ast);
-        const astSnapshot = structuredClone(ast);
+    const svgs = ast.children.filter(
+        (node): node is XastElement => node.type === 'element' && node.name === 'svg',
+    );
 
-        // Only render the SVG on the first call.
-        // We still do everything else (like translate) because after the <svg>
-        // is optimized, translate may succeed if it was previously failing.
-        let vbNew: ViewBox;
-        if (info.multipassCount === 0 && params.autocrop !== false) {
-            vbNew = getViewboxWithoutPadding(svg, vb);
-            addPadding(vbNew, vb, ast, params, info);
-        } else {
-            vbNew = vb;
+    for (const svg of svgs) {
+        if (params.setColor) {
+            transformOrRollback(svg, () => {
+                new SvgRecolor(params.setColor!, params.setColorIssue).recolor(svg);
+            });
         }
 
-        // Attempt to translate back to (0,0) if not already (0,0)
-        const ok = translate(ast, params, vbNew, info.multipassCount);
-        if (!ok) {
-            // rollback AST because it may be in an inconsistent/partially modified state.
-            ast.children = astSnapshot.children;
-            svgNode = unwrapSingleSvgElement(ast);
-            attrs = svgNode.attributes;
-        }
+        const vb = svg.attributes.viewBox
+            ? parseViewBoxAttr(svg.attributes.viewBox)
+            : deriveViewBoxFromDimensions(svg.attributes);
 
-        attrs.viewBox = `${vbNew.x} ${vbNew.y} ${vbNew.width} ${vbNew.height}`;
-        if (params.includeWidthAndHeightAttributes ?? dimensionsPresent) {
-            attrs.width = `${vbNew.width}`;
-            attrs.height = `${vbNew.height}`;
-        } else {
-            delete attrs.width;
-            delete attrs.height;
+        // ensure width & height are absent for correct rendering.
+        const hasDimensions = Boolean(svg.attributes.width || svg.attributes.height);
+        delete svg.attributes.width;
+        delete svg.attributes.height;
+
+        try {
+            // only render the SVG on the first call.
+            let vbNew: ViewBox = vb;
+            if (info.multipassCount === 0 && params.autocrop !== false) {
+                vbNew = getVisiblePixelBounds(stringifyTree(svg), vb);
+                addPadding(vbNew, vb, ast, params, info);
+            }
+
+            if (!params.disableTranslate && (vbNew.x !== 0 || vbNew.y !== 0)) {
+                // translate back to (0,0) if not already (0,0).
+                transformOrRollback(
+                    svg,
+                    () => {
+                        new SvgTranslate(-vbNew.x, -vbNew.y, info.multipassCount).translate(svg);
+                        vbNew.x = 0;
+                        vbNew.y = 0;
+                    },
+                    params.disableTranslateWarning
+                        ? () =>
+                              `Failed to translate <svg> by (${vbNew.x}, ${vbNew.y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
+                              `Ideally you should update the code to fix this issue so translation can properly occur.\n` +
+                              `The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`
+                        : undefined,
+                );
+            }
+
+            svg.attributes.viewBox = `${vbNew.x} ${vbNew.y} ${vbNew.width} ${vbNew.height}`;
+            if (params.includeWidthAndHeightAttributes ?? hasDimensions) {
+                svg.attributes.width = `${vbNew.width}`;
+                svg.attributes.height = `${vbNew.height}`;
+            }
+        } catch (e) {
+            console.error(`Failed to process: ${info.path}`);
+            throw e;
         }
-    } catch (e) {
-        console.error(`Failed to process: ${info.path}`);
-        throw e;
     }
 }
 
-function getViewboxWithoutPadding(svg: string, vb: ViewBox): ViewBox {
-    // Render SVG to RGBA pixels using resvg and calculate non-transparent bounds.
-    const bounds = getBounds(svg, vb.width, vb.height);
-    if (bounds.width !== vb.width || bounds.height !== vb.height) {
-        throw new Error(
-            `Loaded png had unexpected width/height\n<svg viewbox>=${JSON.stringify(vb)}, png bounds=${JSON.stringify(bounds)}`,
-        );
+function transformOrRollback(svg: XastElement, func: () => void, onError?: () => string) {
+    const snapshot = structuredClone(svg);
+    try {
+        func();
+    } catch (err: unknown) {
+        // rollback AST because it may be in an inconsistent/partially modified state.
+        svg.children = snapshot.children;
+        svg.attributes = snapshot.attributes;
+
+        if (err instanceof ControlFlowRollback) {
+            return; // just rollback.
+        }
+        if (err instanceof ControlFlowBreak) {
+            throw err; // rethrows up.
+        }
+        if (err instanceof Error && onError) {
+            console.warn(onError(), err);
+        }
     }
-    return {
-        x: vb.x + bounds.xMin,
-        y: vb.y + bounds.yMin,
-        width: bounds.xMax - bounds.xMin + 1,
-        height: bounds.yMax - bounds.yMin + 1,
-    };
 }
 
 function addPadding(
@@ -167,93 +190,6 @@ function addPadding(
     } else {
         throw Ensure.unexpectedObject('Unsupported padding specified', padding);
     }
-}
-
-/**
- * @return `true` on success (including when no action is needed);
- *         `false` on failure, in which case the AST must be rolled back.
- */
-function translate(
-    ast: XastRoot,
-    params: CropParams,
-    vbNew: ViewBox,
-    multipassCount: number,
-): boolean {
-    const requiresClassPass = Boolean(params.removeClass);
-    const requiresDeprecatedPass = Boolean(params.removeDeprecated);
-    const requiresStylePass = Boolean(params.removeStyle);
-    const requiresRecolorPass = Boolean(params.setColor);
-    const requiresTranslatePass = vbNew.x !== 0 || vbNew.y !== 0;
-
-    if (
-        params.disableTranslate ||
-        (!requiresTranslatePass &&
-            !requiresClassPass &&
-            !requiresStylePass &&
-            !requiresDeprecatedPass &&
-            !requiresRecolorPass)
-    ) {
-        return true; // Nothing to do.
-    }
-
-    try {
-        if (requiresTranslatePass) {
-            // Attempt to translate back to (0, 0)
-            new SvgTranslate(-vbNew.x, -vbNew.y, multipassCount).translate(ast);
-
-            vbNew.x = 0;
-            vbNew.y = 0;
-        }
-
-        if (requiresClassPass) {
-            new SvgRemoveClass().remove(ast);
-        }
-
-        if (requiresStylePass) {
-            new SvgRemoveStyle().remove(ast);
-        }
-
-        if (requiresDeprecatedPass) {
-            new SvgRemoveDeprecated().remove(ast);
-        }
-
-        if (requiresRecolorPass) {
-            new SvgRecolor(params.setColor!, params.setColorIssue).recolor(ast);
-        }
-    } catch (err) {
-        if (err instanceof SvgTranslateError) {
-            if (err.type === 'silentRollback') {
-                return false; // Rollback!
-            }
-            throw err; // Fail outright when this error is thrown.
-        } else if (!params.disableTranslateWarning) {
-            console.warn(
-                `Failed to translate <svg> by (${vbNew.x}, ${vbNew.y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
-                    `Ideally you should update the code to fix this issue so translation can properly occur.\n` +
-                    `The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`,
-                err,
-            );
-        }
-        return false; // Rollback!
-    }
-
-    return true;
-}
-
-function unwrapSingleSvgElement(ast: XastRoot): XastElement {
-    const svgs = ast.children.filter(
-        (node): node is XastElement => node.type === 'element' && node.name === 'svg',
-    );
-
-    if (ast.children.length === 0) {
-        throw new Error('AST contains no nodes');
-    } else if (svgs.length === 0) {
-        throw new Error("AST doesn't contain root <svg> element");
-    } else if (svgs.length > 1) {
-        throw new Error('AST contains multiple root <svg> elements');
-    }
-
-    return svgs[0]!;
 }
 
 function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBox {

@@ -1,5 +1,5 @@
+import { ControlFlowBreak } from './ControlFlowErrors';
 import SvgRecolor from './SvgRecolor';
-import SvgTranslateError from './SvgTranslateError';
 import { parseIntoTree, stringifyTree } from './SvgUtils';
 
 function recolor(
@@ -8,7 +8,7 @@ function recolor(
     setColorIssue?: 'fail' | 'warn' | 'ignore' | 'rollback',
 ) {
     const ast = parseIntoTree(svg);
-    new SvgRecolor(setColor, setColorIssue).recolor(ast);
+    new SvgRecolor(setColor, setColorIssue).recolorTree(ast);
     return stringifyTree(ast);
 }
 
@@ -31,7 +31,7 @@ test('sets root fill when no color attributes were present', () => {
 test('fails on mixed colors when setColorIssue=fail', () => {
     expect(() =>
         recolor('currentColor', '<svg><path fill="black"/><path stroke="red"/></svg>', 'fail'),
-    ).toThrow(SvgTranslateError);
+    ).toThrow(ControlFlowBreak);
 });
 
 test('converts mixed colors when setColorIssue=ignore', () => {

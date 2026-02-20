@@ -1,75 +1,62 @@
+import assert from 'node:assert/strict';
+
 import { Resvg } from '@resvg/resvg-js';
 
-import Ensure from './Ensure';
+import { ViewBox } from './AutocropUtils';
 
-export type ImageBounds = {
-    width: number;
-    height: number;
-    xMin: number;
-    yMin: number;
-    xMax: number;
-    yMax: number;
-};
+const CH = 4;
+const ALPHA_CH = 3;
 
-/** Render svg and return width/height and bounds of visible pixels. */
-export function getBounds(svg: string, width: number, height: number): ImageBounds {
-    width = Ensure.integerStrict(width, 'width');
-    height = Ensure.integerStrict(height, 'height');
-
-    if (!svg) {
-        throw new Error('No svg provided');
-    } else if (width <= 0 || height <= 0) {
-        throw new Error(`Invalid width/height provided; width=${width}, height=${height}`);
+/**
+ * Renders SVG to RGBA pixels using `resvg` and calculate non-transparent bounds.
+ *
+ * The returned bounding box is always inside the SVG’s viewBox.
+ *
+ * @throws Error if the SVG is malformed, or has an invalid viewBox.
+ *
+ * @see https://github.com/thx/resvg-js
+ */
+export function getVisiblePixelBounds(svg: string, vb: ViewBox): ViewBox {
+    // negative viewBox width/height is an error; 0 disables rendering.
+    // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
+    if (vb.width <= 0 || vb.height <= 0) {
+        return { ...vb, width: 0, height: 0 };
     }
 
     const img = new Resvg(svg).render();
-    return getVisiblePixelBounds(img.pixels, img.width, img.height);
-}
+    const pixels = img.pixels;
 
-function getVisiblePixelBounds(pixels: Buffer, width: number, height: number): ImageBounds {
-    const expectedPixelCount = width * height * 4;
-    if (!pixels || pixels.length !== expectedPixelCount) {
-        throw new Error(
-            `Invalid rendered image pixels; expected length=${expectedPixelCount}, actual=${pixels?.length ?? null}`,
-        );
-    }
+    assert.equal(
+        pixels.length,
+        img.width * img.height * CH,
+        'Rendered pixel buffer shape is malformed; RGBA indexing becomes unreliable and can produce incorrect visible bounds.',
+    );
 
-    // Scan image determining bounds of visible pixels.
-    let xMin = width;
-    let yMin = height;
-    let xMax = -1;
-    let yMax = -1;
-    const rowStride = width * 4;
+    // we may use `new Resvg(svg).getBBox()` for float coordinates in the future.
+    let boxL = img.width;
+    let boxT = img.height;
+    let boxR = -1;
+    let boxB = -1;
 
-    for (let y = 0; y < height; y++) {
-        const rowStart = y * rowStride;
-        for (let x = 0; x < width; x++) {
-            const alpha = pixels[rowStart + x * 4 + 3]!;
-            // the pixel is visible?
-            if (alpha > 0) {
-                if (x < xMin) {
-                    xMin = x;
-                } else if (x > xMax) {
-                    xMax = x;
-                }
+    // scan the 'intersected' bounds and extend 'optimal' bounds when non-visible pixels are met.
+    for (let y = 0; y < img.height; y++) {
+        const rowStart = y * img.width * CH;
 
-                if (y < yMin) {
-                    yMin = y;
-                } else if (y > yMax) {
-                    yMax = y;
-                }
-            }
+        for (let x = 0; x < img.width; x++) {
+            const alpha = pixels[rowStart + x * CH + ALPHA_CH]!;
+            if (alpha <= 0) continue; // skip invisible pixels.
+
+            boxL = Math.min(boxL, x);
+            boxT = Math.min(boxT, y);
+            boxR = Math.max(boxR, x);
+            boxB = Math.max(boxB, y);
         }
     }
 
-    if (xMax < 0 || yMax < 0) {
-        throw new Error('Image has no visible pixels');
-    }
-
-    const result = { width, height, xMin, yMin, xMax, yMax };
-    if (0 <= xMin && xMin <= xMax && xMax < width && 0 <= yMin && yMin <= yMax && yMax < height) {
-        return result;
-    }
-
-    throw new Error(`Unexpected - invalid bounds calculated: ${JSON.stringify(result)}`);
+    return {
+        x: vb.x + boxL,
+        y: vb.y + boxT,
+        width: boxR - boxL + 1,
+        height: boxB - boxT + 1,
+    };
 }

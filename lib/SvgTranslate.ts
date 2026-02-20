@@ -1,16 +1,15 @@
-import type { XastElement, XastRoot } from 'svgo';
-
 import { SVGPathData } from 'svg-pathdata';
+import type { XastChild, XastElement, XastRoot } from 'svgo';
 
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
 import Ensure from './Ensure';
-import SvgTranslateError from './SvgTranslateError';
 import { stringifyTree } from './SvgUtils';
 
 export default class SvgTranslate {
     constructor(
         private x: number,
         private y: number,
-        private multipassCount = 0,
+        private multiPassCount = 0,
     ) {}
 
     /**
@@ -19,18 +18,18 @@ export default class SvgTranslate {
      * Implementation works off a whitelist of known svg elements/attributes - if anything unknown is encountered, an exception is thrown.
      * If an exception is thrown, the caller has to roll back the AST themselves to the original unmodified version.
      */
-    translate(ast: XastRoot) {
+    translateTree(ast: XastRoot) {
         for (const child of ast.children) {
-            if (child.type === 'element' && child.name === 'svg') {
-                this.#rootSvg(child);
-            } else {
-                // Can ignore comments and instructions like <?xml ... ?>
-            }
+            this.translate(child);
         }
     }
 
-    #rootSvg(svg: XastElement) {
-        this.#svg(svg);
+    translate(node: XastChild) {
+        if (node.type === 'element' && node.name === 'svg') {
+            this.#svg(node);
+        } else {
+            // Can ignore comments and instructions like <?xml ... ?>
+        }
     }
 
     #svg(svg: XastElement) {
@@ -269,15 +268,15 @@ export default class SvgTranslate {
     }
 
     #bailIfAnotherPluginMustRunFirst(pluginName: string, node: XastElement) {
-        if (this.multipassCount === 0) {
-            throw SvgTranslateError.silentRollback(`This plugin will run again on the next pass.`);
+        if (this.multiPassCount === 0) {
+            throw new ControlFlowRollback(`This plugin will run again on the next pass.`);
         } else {
             const err =
                 `Couldn't process the node as SVGO’s internal plugin "${pluginName}" had to preprocess it first:\n` +
                 `  ${stringifyTree(node).slice(0, 120)}\n` +
                 `You need to make sure the plugin is enabled in the SVGO configuration file.\n` +
                 `Read more: https://svgo.dev/docs/plugins/${pluginName}/`;
-            throw Ensure.unexpectedObject(err, node);
+            throw new ControlFlowBreak(err);
         }
     }
 

@@ -1,7 +1,7 @@
-import type { XastElement, XastRoot } from 'svgo';
+import type { XastChild, XastElement, XastRoot } from 'svgo';
 
+import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors';
 import Ensure from './Ensure';
-import SvgTranslateError from './SvgTranslateError';
 
 export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
 
@@ -71,16 +71,20 @@ export default class SvgRecolor {
         }
     }
 
-    recolor(ast: XastRoot): void {
+    recolorTree(ast: XastRoot) {
         for (const node of ast.children) {
-            if (node.type === 'element' && node.name === 'svg') {
-                this.firstSeenColor = null;
-                this.visitElement(node);
-                // if the SVG has no explicit color attributes, it falls back to the "initial" colors.
-                // that’s why we set `fill` on the root <svg> element.
-                if (!this.firstSeenColor) {
-                    node.attributes.fill = this.newColor;
-                }
+            this.recolor(node);
+        }
+    }
+
+    recolor(node: XastChild) {
+        if (node.type === 'element' && node.name === 'svg') {
+            this.firstSeenColor = null;
+            this.visitElement(node);
+            // if the SVG has no explicit color attributes, it falls back to the "initial" colors.
+            // that’s why we set `fill` on the root <svg> element.
+            if (!this.firstSeenColor) {
+                node.attributes.fill = this.newColor;
             }
         }
     }
@@ -117,18 +121,18 @@ export default class SvgRecolor {
         node.attributes[attr] = this.newColor;
 
         if (this.firstSeenColor !== value && this.onColorIssue !== 'ignore') {
-            this.notifyColorsAreMixed(node);
+            this.notifyColorsAreMixed();
         }
     }
 
-    notifyColorsAreMixed(node: XastElement) {
+    notifyColorsAreMixed() {
         const message = 'Expected a monochrome (single-color) SVG, but found multiple colors.';
         if (this.onColorIssue === 'warn') {
             console.warn(message);
         } else if (this.onColorIssue === 'rollback') {
-            throw Ensure.unexpectedObject(message, node); // todo: why don't we throw rollback here?
+            throw new ControlFlowRollback(message);
         } else {
-            throw SvgTranslateError.fail(message);
+            throw new ControlFlowBreak(message);
         }
     }
 }

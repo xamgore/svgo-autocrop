@@ -6,11 +6,11 @@
  * Modified copy of https://github.com/svg/svgo/tree/master/test/plugins (see _index.test.js).
  */
 
-import type { CropParams } from 'svgo-autocrop';
-
 import { EOL } from 'node:os';
 import * as PATH from 'node:path';
+
 import { type CustomPlugin, optimize } from 'svgo';
+import type { CropParams } from 'svgo-autocrop';
 
 import autocrop from '../index';
 
@@ -372,8 +372,42 @@ it('22 - Smoke testing', function () {
             removeStyle: true,
             removeDeprecated: true,
             setColor: 'currentColor',
-            setColorIssue: 'fail',
+            setColorIssue: 'rollback',
             autocrop: true,
+        },
+    );
+    expect(actual).toMatchSnapshot();
+});
+
+it('23 - Safe cleanup passes should still run if translate pass rolls back.', function () {
+    const actual = runPlugin(
+        '23',
+        `
+        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" class="root" version="1.1">
+            <rect x="5" y="5" width="10" height="10" style="fill:#000" class="shape" unsupported="abc" />
+        </svg>`,
+        {
+            removeClass: true,
+            removeStyle: true,
+            removeDeprecated: true,
+            disableTranslateWarning: true,
+        },
+    );
+    expect(actual).toMatchSnapshot();
+});
+
+it('24 - Should process multiple root <svg> elements without throwing.', function () {
+    const actual = runPlugin(
+        '24',
+        `
+        <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" class="root-1">
+            <rect x="5" y="5" width="10" height="10" fill="#000" class="shape-1"/>
+        </svg>
+        <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg" class="root-2">
+            <rect x="8" y="9" width="12" height="11" fill="#000" class="shape-2"/>
+        </svg>`,
+        {
+            removeClass: true,
         },
     );
     expect(actual).toMatchSnapshot();

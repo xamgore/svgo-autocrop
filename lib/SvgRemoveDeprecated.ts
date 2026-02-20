@@ -1,4 +1,4 @@
-import type { XastElement, XastRoot } from 'svgo';
+import type { XastRoot } from 'svgo';
 
 import { removeAttributesBySelector } from './SvgUtils';
 
@@ -22,7 +22,7 @@ export type RemoveDeprecatedParams = {
  *
  * Reimplements internal plugins:
  * - `removeUnknownsAndDefaults: { keepDataAttrs: false }`,
- * - `removeDeprecatedAttrs: { removeUnsafe: true }`,
+ * - `removeDeprecatedAttrs: { removeAny: true }`,
  */
 export default class SvgRemoveDeprecated {
     remove(ast: XastRoot): void {
@@ -35,11 +35,6 @@ export default class SvgRemoveDeprecated {
         removeAttributesBySelector(ast, '[xml\\:space]', ['xml:space']);
         removeAttributesBySelector(ast, '[xmlns\\:sketch]', ['xmlns:sketch']);
 
-        const hasAttrNamePrefix = (prefix: string) => (el: XastElement) =>
-            Object.keys(el.attributes ?? {}).some((name) => name.startsWith(prefix));
-
-        removeAttributesBySelector(ast, hasAttrNamePrefix('sketch:'), (attr) =>
-            attr.startsWith('sketch:'),
-        );
+        removeAttributesBySelector(ast, '*', (attr) => attr.startsWith('sketch:'));
     }
 }

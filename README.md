@@ -1,66 +1,105 @@
 # svgo-autocrop
 
-Plugin which can be added to [svgo](https://github.com/svg/svgo).
+SVGO plugin that cleans up mismatched third-party SVG icon packs. If your icons come from mixed sources and render differently, this plugin helps you keep framing, sizing, and color behavior consistent.
 
-Reduces viewBox to minimum possible size so no wasted transparent space around svg.
+### Example
 
-This plugin focuses on making svgs as consistent as possible.
-It's great for taking multiple libraries of 1000s of svgs, removing all padding, removing deprecated/redundant tags and
-replacing the arbitrary colors svg libraries tend to use with a set color (we recommend setting `'currentColor'` so the color is inherited/easily modifiable from html/css).
-Tested with heaps of free svg libraries like [Bootstrap Icons](https://icons.getbootstrap.com/), [Entypo+](http://www.entypo.com/), [Fontawesome](https://fontawesome.com)
-and [Google's Material Design Icons](https://github.com/google/material-design-icons/releases) and more using [this config file](example-config.ts).
+Conceptual before/after illustration (Markdown table + local SVGs, so it renders on both GitHub and JSR):
 
-**Example Input**
+| Before                                                   | After                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------- |
+| ![Conceptual before autocrop](.github/example-input.svg) | ![Conceptual after autocrop](.github/example-output.svg) |
 
-```
+**Input**
+
+```svg
 <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-   <rect x="5" y="5" width="10" height="10" fill="#000"/>
+   <circle cx="5" cy="5" r="5" fill="#000"/>
 </svg>
 ```
 
-**Example Output**
+**Output**
 
-```
+```svg
 <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
-   <rect x="0" y="0" width="10" height="10" fill="#000"/>
+   <circle cx="5" cy="5" r="5" fill="#000"/>
 </svg>
 ```
 
-**Example Output if using {setColor: 'currentColor'} as parameters**
+**Output with `{ setColor: 'currentColor' }`**
 
-```
+```svg
 <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
-   <rect x="0" y="0" width="10" height="10" fill="currentColor"/>
+   <circle cx="5" cy="5" r="5" fill="currentColor"/>
 </svg>
 ```
+
+## Quick Start
+
+```terminaloutput
+pnpm add -D svgo svgo-autocrop
+```
+
+Then run SVGO:
+
+```terminaloutput
+svgo --input 'input.svg' --output 'output.svg'
+```
+
+Or with an explicit config:
+
+```terminaloutput
+svgo --input 'input.svg' --output 'output.svg' --config 'svgo.config.mjs'
+```
+
+Recommended usage pattern is shown in [svgo.config.mjs](svgo.config.mjs):
+
+- `preset-default` enabled
+- `multipass: true`
+- this plugin near the end, after baseline shape/color simplifications
+
+### Practical presets
+
+1. Tight crop only (safe default for most icons):
+    ```yaml
+    {}
+    ```
+2. Crop + clean noisy metadata:
+    ```yaml
+    {
+        includeWidthAndHeightAttributes: false,
+        removeClass: true,
+        removeStyle: true,
+        removeDeprecated: true,
+    }
+    ```
+3. Monochrome UI icons:
+    ```yaml
+    {
+        includeWidthAndHeightAttributes: false,
+        removeClass: true,
+        removeStyle: true,
+        removeDeprecated: true,
+        setColor: 'currentColor',
+        setColorIssue: 'fail',
+    }
+    ```
 
 ## Parameters
 
-| Parameter                                             | Default     | Recommended                                    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ----------------------------------------------------- | ----------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| autocrop                                              | `true`      | `true`                                         | Disable auto cropping. Useful if you only want to use the `removeClass` or `setColor` functionality described below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| <sub><sup>includeWidthAndHeightAttributes</sup></sub> | `undefined` | `false`                                        | If `undefined`, only updated width/height if SVG already has width/height (this is the default). If `true`, writes width/height. If `false`, deletes width/height (which we recommend so your SVG always scales). If `true`, you should also disable svgo's default `removeViewBox` plugin and optionally enable svgo's `removeDimensions` plugin - see [example-config.ts](example-config.ts) below for how to do this.                                                                                                                                                                             |
-| padding                                               | `undefined` | `undefined`                                    | Either number, object defining {top, bottom, left, right} or function accepting the parameters `(viewboxNew, viewbox?, ast?, params?, info?)` where viewboxNew should be updated with the required padding. _We don't recommend specifying padding on your SVG - padding should be defined in your css._                                                                                                                                                                                                                                                                                             |
-| removeClass                                           | `false`     | `true` (typically can be safely set to `true`) | If `true`, removes `class` attribute if encountered. Good for [Bootstrap Icons](https://icons.getbootstrap.com/) which unnecessarily include the svg name in the class.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| removeStyle                                           | `false`     | `true` (typically can be safely set to `true`) | If `true`, removes `style`/`font-family` attribute if encountered. Good for lower quality <svg> that redundantly include styling that's never actually used.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| removeDeprecated                                      | `false`     | `true`                                         | If `true`, then deletes `<svg version/baseProfile>` attributes. Also deletes other non-standard/not useful attributes like `sketch:type`/`data-name`/etc.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| setColor                                              | `undefined` | `'currentColor'`                               | If defined, replace all colors with color specified. Usually set to `'currentColor'` so color is inherited/easily modifiable from html/css. If multiple colors are encountered, how this is handled is defined by the `setColorIssue` property.                                                                                                                                                                                                                                                                                                                                                      |
-| setColorIssue                                         | `"warn"`    | `'warn'` or `'fail'`                           | Defines the action to take when `setColor` is set and multiple colors are encountered. If `'warn'`, then a warning is outputted to the console that your <svg> will be converted from a multicolor/multitone <svg> to a single color/monotune <svg> using the 'setColor' specified. If `'fail'`, then an error is thrown instead of being logged as a warning. If `'rollback'`, then <svg> is still autocropped but translate back to (0,0)/'removeClass'/'setColor' will be undone/rolled back. If `'ignore'`, then all colors are changed to the 'setColor' specified without any warnings/errors. |
-| disableTranslate                                      | `false`     | `false`                                        | Global override you generally shouldn't need - disables attempt to translate back to (0, 0) if not already (0,0), also has the effect of disabling `removeClass`, `removeDeprecated` and `setColor`. If this is set to `true`, then this plugin will only autocrop, nothing else. This can be safely left enabled, but added just in case someone needs it or whats to disable all the extra functionality this plugin supports.                                                                                                                                                                     |
-| disableTranslateWarning                               | `false`     | Set to `true` if the warning becomes annoying  | Disable warning when translation back to (0, 0) fails, or `removeClass`, `removeDeprecated` and `setColor` fails. If this warning is annoying you, just set this to true. _FYI In many cases these warnings are only outputted on the first pass, but by the second pass the warning no longer needs to be outputted because the svgo plugins have all worked together to remove the problem._                                                                                                                                                                                                       |
-| debug                                                 | `false`     | `false`                                        | _Debug option:_ Log old/new viewbox to console                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| debugWriteFiles                                       | `false`     | `false`                                        | _Debug option:_ If `true`, then writes "\${srcSvg}.png" and "\${srcSvg}.svg" file to disk for easier debugging. If string, then then writes "\${debugWriteFiles}.png" and "\${debugWriteFiles}.svg" file to disk for easier debugging. _FYI Setting this to true is an easy way to convert all your SVGs to PNGs._                                                                                                                                                                                                                                                                                   |
+| Parameter                                             | Default     | Recommended                                    | Description                                                                                                                                                                                                                                        |
+| ----------------------------------------------------- | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| autocrop                                              | `true`      | `true`                                         | Enables auto-cropping. Set `false` to skip viewBox tightening while still allowing other enabled transforms.                                                                                                                                       |
+| <sub><sup>includeWidthAndHeightAttributes</sup></sub> | `undefined` | `false`                                        | Controls root `<svg>` `width`/`height` handling: `false` removes both, `true` writes both from the final viewBox, `undefined` (default) only writes them when the input already had dimensions.                                                    |
+| padding                                               | `undefined` | `undefined`                                    | Adds extra space after autocrop. Accepts a number, an object `{ top, bottom, left, right }`, or a function `(viewboxNew, viewbox, ast, params, info)` that mutates `viewboxNew`. Padding is usually better handled in CSS than baked into the SVG. |
+| removeClass                                           | `false`     | `true` (typically can be safely set to `true`) | Removes all `class` attributes when enabled.                                                                                                                                                                                                       |
+| removeStyle                                           | `false`     | `true` (typically can be safely set to `true`) | Removes inline styling noise when enabled: `style`, `font-family`, and empty/`visible` `overflow` attributes.                                                                                                                                      |
+| removeDeprecated                                      | `false`     | `true`                                         | Removes deprecated and exporter-specific metadata when enabled (for example `version`, `baseProfile`, `enable-background`, `data-name`, `xml:space`, `xmlns:sketch`, and `sketch:*`).                                                              |
+| setColor                                              | `undefined` | `'currentColor'`                               | Replaces paint colors with the specified value (usually `'currentColor'`).                                                                                                                                                                         |
+| setColorIssue                                         | `'warn'`    | `'warn'` or `'fail'`                           | Behavior when `setColor` is active and multiple colors are found: `'warn'` logs a warning, `'fail'` throws, `'rollback'` undoes recoloring, `'ignore'` forces recoloring without warning/error.                                                    |
+| disableTranslate                                      | `false`     | `false`                                        | Disables translating geometry back to `(0, 0)` when enabled.                                                                                                                                                                                       |
+| disableTranslateWarning                               | `true`      | `true`                                         | Suppresses warnings when translation cannot be applied.                                                                                                                                                                                            |
 
-Based off the above, your parameters should typically be `{}` or `{includeWidthAndHeightAttributes: false}` or something like `{includeWidthAndHeightAttributes: false, removeClass: true, removeStyle: true, removeDeprecated: true, setColor: 'currentColor', setColorIssue: 'fail'}`.
+## Why this fork
 
-## Example config
-
-See [example-config.ts](example-config.ts) config.
-
-Then run with svgo;
-
-> svgo --input 'input.svg' --output 'output.svg' --config '[example-config.ts](example-config.ts)'
-
-## Plugin walkthrough
-
-See [index.ts](index.ts) and [AutocropUtils.ts](lib/AutocropUtils.ts) for starting points.
+This project began as a fork of [glennosss/svgo-autocrop](https://github.com/glennosss/svgo-autocrop), but the core has changed a lot. Cropping now runs in-process with [@resvg/resvg-js](https://github.com/thx/resvg-js), so there is no Puppeteer startup or worker-thread overhead, and batch icon processing is faster. The codebase also moved to TypeScript + SVGO v4. The transform flow is safer too: if one step hits an unsupported case, that step can roll back while the other successful transforms stay in place.

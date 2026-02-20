@@ -11,6 +11,7 @@
     "ignorePatterns": ["node_modules/**", "coverage/**", "scripts/**"],
     "plugins": ["eslint", "unicorn", "typescript", "oxc", "import", "node", "promise", "jest"],
     "rules": {
+        "max-classes-per-file": "off",
         "max-lines": "off",
         "max-lines-per-function": "off",
         "no-array-sort": "off",

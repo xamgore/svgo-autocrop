@@ -1,4 +1,11 @@
-import { type CustomPlugin, optimize, querySelectorAll, type XastElement, type XastParent, type XastRoot, } from 'svgo';
+import {
+    type CustomPlugin,
+    optimize,
+    querySelectorAll,
+    type XastElement,
+    type XastParent,
+    type XastRoot,
+} from 'svgo';
 
 /**
  * Parse the SVG/XML string provided - and return the javascript in-memory representation.
@@ -28,15 +35,16 @@ export function parseIntoTree(str: string, path?: string): XastRoot {
 /**
  * Format the AST/Javascript in-memory representation back to the SVG/XML string.
  */
-export function stringifyTree(ast: XastParent): string {
-    const astCopy = structuredClone(ast);
+export function stringifyTree(node: XastParent): string {
+    const nodeCopy = structuredClone(node);
     const injectAstPlugin: CustomPlugin = {
         name: 'inject-ast',
         fn: (root) => {
-            root.children = astCopy.children;
+            // oxlint-disable-next-line typescript-eslint/no-unsafe-type-assertion
+            root.children = node.type === 'element' ? [nodeCopy as XastElement] : node.children;
         },
     };
-    return optimize('<svg xmlns="http://www.w3.org/2000/svg"></svg>', {
+    return optimize('<svg></svg>', {
         multipass: false,
         plugins: [injectAstPlugin],
     }).data;
@@ -44,10 +52,10 @@ export function stringifyTree(ast: XastParent): string {
 
 export function removeAttributesBySelector(
     ast: XastRoot,
-    selector: string | ((node: XastElement) => boolean),
+    selector: string,
     attributes: string[] | ((attr: string, value: string) => boolean),
 ) {
-    const nodes = querySelectorAll(ast, selector as unknown as string);
+    const nodes = querySelectorAll(ast, selector);
     for (const node of nodes) {
         if (node.type !== 'element') continue;
 

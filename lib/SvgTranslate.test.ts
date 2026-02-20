@@ -5,7 +5,7 @@ import { parseIntoTree, stringifyTree } from './SvgUtils';
 
 function translate([dx, dy]: number[], svg: string): string {
     const ast = parseIntoTree(svg);
-    new SvgTranslate(dx!, dy!).translate(ast);
+    new SvgTranslate(dx!, dy!).translateTree(ast);
     return stringifyTree(ast);
 }
 

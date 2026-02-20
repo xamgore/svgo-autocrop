@@ -1,7 +1,6 @@
 import type { CustomPlugin } from 'svgo';
 
 import type { CropParams } from './lib/AutocropUtils';
-
 import { plugin } from './lib/AutocropUtils';
 
 const autocrop: CustomPlugin<CropParams> = {
@@ -18,8 +17,6 @@ const autocrop: CustomPlugin<CropParams> = {
      * <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
      *   <rect x="0" y="0" width="10" height="10" fill="#000"/>
      * </svg>
-     *
-     * @author Igor Strebz
      */
     fn: (ast, params = {}, info) => {
         plugin(ast, params, info);
