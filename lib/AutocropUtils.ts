@@ -67,6 +67,9 @@ export type CropParams = RemoveClassParams &
         disableTranslateWarning?: boolean;
     };
 
+/**
+ * Applies autocrop and related SVG cleanups to the root AST.
+ */
 export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo): void {
     params.disableTranslateWarning ??= true;
 

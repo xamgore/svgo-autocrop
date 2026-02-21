@@ -50,6 +50,9 @@ export function stringifyTree(node: XastParent): string {
     }).data;
 }
 
+/**
+ * Removes one or more attributes from all nodes matching the selector.
+ */
 export function removeAttributesBySelector(
     ast: XastRoot,
     selector: string,
