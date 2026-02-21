@@ -2,6 +2,7 @@ import type { XastRoot } from 'svgo';
 
 import { removeAttributesBySelector } from './SvgUtils.ts';
 
+/** Options for removing deprecated/exporter metadata. */
 export type RemoveDeprecatedParams = {
     /**
      * Removes deprecated and exporter-specific metadata attributes when `true`.

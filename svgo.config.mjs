@@ -61,4 +61,5 @@ const config = {
     ],
 };
 
+/** Example SVGO configuration that wires in this plugin. */
 export default config;

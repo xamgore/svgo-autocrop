@@ -22,5 +22,7 @@ const autocrop: CustomPlugin<CropParams> = {
     },
 };
 
+/** Public options accepted by the `autocrop` plugin. */
 export type { CropParams };
+/** Default export for SVGO plugin registration. */
 export default autocrop;

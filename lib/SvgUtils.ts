@@ -32,9 +32,7 @@ export function parseIntoTree(str: string, path?: string): XastRoot {
     return ast;
 }
 
-/**
- * Format the AST/Javascript in-memory representation back to the SVG/XML string.
- */
+/** Format the AST/Javascript in-memory representation back to the SVG/XML string. */
 export function stringifyTree(node: XastParent): string {
     const nodeCopy = structuredClone(node);
     const injectAstPlugin: CustomPlugin = {
@@ -50,9 +48,7 @@ export function stringifyTree(node: XastParent): string {
     }).data;
 }
 
-/**
- * Removes one or more attributes from all nodes matching the selector.
- */
+/** Removes one or more attributes from all nodes matching the selector. */
 export function removeAttributesBySelector(
     ast: XastRoot,
     selector: string,

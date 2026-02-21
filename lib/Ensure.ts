@@ -1,5 +1,6 @@
 import util from 'node:util';
 
+/** Runtime validation helpers used while normalizing SVG AST data. */
 export default class Ensure {
     static unexpectedObject(message: string, obj: any) {
         const dbg = util.inspect(obj, { showHidden: false, depth: 2 });

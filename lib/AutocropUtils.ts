@@ -12,6 +12,7 @@ import SvgRemoveStyle, { RemoveStyleParams } from './SvgRemoveStyle.ts';
 import SvgTranslate from './SvgTranslate.ts';
 import { stringifyTree } from './SvgUtils.ts';
 
+/** Rectangle described by SVG viewBox coordinates. */
 export type ViewBox = {
     x: number;
     y: number;
@@ -19,13 +20,15 @@ export type ViewBox = {
     height: number;
 };
 
+/** Per-side padding values used by {@link CropParams.padding}. */
 type PaddingObject = {
-    top: unknown;
-    bottom: unknown;
-    left: unknown;
-    right: unknown;
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
 };
 
+/** Callback shape for custom padding logic. */
 type PaddingFunction = (
     viewboxNew: ViewBox,
     viewbox: ViewBox,
@@ -34,6 +37,7 @@ type PaddingFunction = (
     info: PluginInfo,
 ) => void;
 
+/** Configuration options for the autocrop plugin. */
 export type CropParams = RemoveClassParams &
     RemoveDeprecatedParams &
     RemoveStyleParams &
@@ -67,9 +71,7 @@ export type CropParams = RemoveClassParams &
         disableTranslateWarning?: boolean;
     };
 
-/**
- * Applies autocrop and related SVG cleanups to the root AST.
- */
+/** Applies autocrop and related SVG cleanups to the root AST. */
 export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo): void {
     params.disableTranslateWarning ??= true;
 
@@ -141,6 +143,7 @@ export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo)
     }
 }
 
+/** Runs a mutating transform and restores the original SVG node on rollback-worthy failures. */
 function transformOrRollback(svg: XastElement, func: () => void, onError?: () => string) {
     const snapshot = structuredClone(svg);
     try {
@@ -162,6 +165,7 @@ function transformOrRollback(svg: XastElement, func: () => void, onError?: () =>
     }
 }
 
+/** Applies configured padding to the computed output viewBox. */
 function addPadding(
     vbNew: ViewBox,
     vb: ViewBox,
@@ -195,6 +199,7 @@ function addPadding(
     }
 }
 
+/** Builds a fallback viewBox from width/height attributes when viewBox is absent. */
 function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBox {
     return {
         x: 0,
@@ -204,6 +209,7 @@ function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBo
     };
 }
 
+/** Parses an SVG `viewBox` attribute into numeric coordinates. */
 function parseViewBoxAttr(attr: string): ViewBox {
     const array = attr.split(/[ ,]+/, 4);
     if (array.length !== 4) {

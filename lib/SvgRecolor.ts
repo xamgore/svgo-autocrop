@@ -3,8 +3,10 @@ import type { XastChild, XastElement, XastRoot } from 'svgo';
 import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
 import Ensure from './Ensure.ts';
 
+/** Strategy for handling multiple colors when `setColor` is enabled. */
 export type ColorIssueReaction = 'fail' | 'warn' | 'ignore' | 'rollback';
 
+/** Options for SVG recoloring behavior. */
 export type RecolorParams = {
     /**
      * Replaces all colors with this value when set (usually `currentColor`).

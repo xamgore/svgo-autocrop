@@ -20,7 +20,16 @@
         "no-negated-condition": "off",
         "no-warning-comments": "off",
         "prefer-const": "error",
-        "jsdoc-js/require-jsdoc": ["error", { "publicOnly": true }],
+        "jsdoc-js/require-jsdoc": [
+            "error",
+            {
+                "publicOnly": true,
+                "require": {
+                    "FunctionDeclaration": false
+                },
+                "contexts": ["ExportNamedDeclaration", "ExportDefaultDeclaration"]
+            }
+        ],
         "sort-vars": "off",
         "typescript/no-any": "error",
         "typescript/no-extraneous-class": "off",

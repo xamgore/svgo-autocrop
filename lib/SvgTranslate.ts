@@ -5,6 +5,7 @@ import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
 import Ensure from './Ensure.ts';
 import { stringifyTree } from './SvgUtils.ts';
 
+/** Translates SVG geometry by a fixed x/y offset. */
 export default class SvgTranslate {
     constructor(
         private x: number,

@@ -2,6 +2,7 @@ import type { XastRoot } from 'svgo';
 
 import { removeAttributesBySelector } from './SvgUtils.ts';
 
+/** Options for style-attribute cleanup. */
 export type RemoveStyleParams = {
     /**
      * Removes all `style`, `font-family`, and `overflow="visible"` attributes when `true`.

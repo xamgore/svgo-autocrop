@@ -2,6 +2,7 @@ import type { XastRoot } from 'svgo';
 
 import { removeAttributesBySelector } from './SvgUtils.ts';
 
+/** Options for class-attribute cleanup. */
 export type RemoveClassParams = {
     /**
      * Removes all `class` attributes when `true`.
