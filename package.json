@@ -34,7 +34,7 @@
         "lint": "oxlint --type-aware --type-check --format=stylish .",
         "lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
         "report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
-        "jsr:check": "pnpm dlx jsr publish --dry-run",
+        "jsr:check": "pnpm run -s fmt:check && pnpm run -s lint && pnpm run -s test && pnpm dlx jsr publish --dry-run",
         "test": "jest",
         "test:watch": "jest --watch"
     },
