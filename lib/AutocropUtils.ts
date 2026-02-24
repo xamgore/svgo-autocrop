@@ -123,11 +123,11 @@ export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo)
                         vbNew.y = 0;
                     },
                     params.disableTranslateWarning
-                        ? () =>
+                        ? undefined
+                        : () =>
                               `Failed to translate <svg> by (${vbNew.x}, ${vbNew.y}) - this warning can be safely ignored and can be hidden by setting 'disableTranslateWarning=true'.\n` +
                               `Ideally you should update the code to fix this issue so translation can properly occur.\n` +
-                              `The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`
-                        : undefined,
+                              `The only impact of this warning is the top/left of the viewbox won't be (0, 0)\n`,
                 );
             }
 
