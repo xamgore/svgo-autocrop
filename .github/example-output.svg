@@ -16,5 +16,5 @@
   <rect x="30" y="20" width="120" height="120" fill="none" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4 3" />
 
   <text x="30" y="14" fill="#166534" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">tight viewBox around icon</text>
-  <text x="30" y="160" fill="#374151" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">after: viewBox="0 0 10 10"</text>
+  <text x="30" y="160" fill="#374151" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">viewBox="0 0 10 10"</text>
 </svg>

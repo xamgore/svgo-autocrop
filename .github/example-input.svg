@@ -21,5 +21,5 @@
   <rect x="40" y="30" width="60" height="60" fill="none" stroke="#2563eb" stroke-width="1.5" stroke-dasharray="4 3" />
 
   <text x="30" y="14" fill="#b91c1c" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">unused viewBox area</text>
-  <text x="30" y="160" fill="#374151" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">before: viewBox="0 0 20 20"</text>
+  <text x="30" y="160" fill="#374151" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="11">viewBox="0 0 20 20"</text>
 </svg>
