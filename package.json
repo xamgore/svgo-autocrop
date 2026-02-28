@@ -33,10 +33,12 @@
         "fmt:check": "oxfmt --check .",
         "lint": "oxlint --type-aware --type-check --format=stylish .",
         "lint:fix": "oxlint --type-aware --type-check  --format=stylish --fix",
-        "report:visual": "node -r @swc-node/register scripts/generate-visual-report.ts",
+        "report:visual": "node scripts/ensure-local-scope-alias.mjs && node -r @swc-node/register scripts/generate-visual-report.ts",
+        "report:visual:watch": "nodemon --watch scripts/generate-visual-report.ts --ext ts --signal SIGTERM --exec \"pnpm run report:visual\"",
         "jsr:check": "pnpm run -s fmt:check && pnpm run -s lint && pnpm run -s test && pnpm dlx jsr publish --dry-run",
-        "test": "jest",
-        "test:watch": "jest --watch"
+        "test": "jest --ci",
+        "test:watch": "jest --ci --watch",
+        "test:coverage": "jest --ci --coverage --coverageProvider=v8"
     },
     "license": "MIT",
     "dependencies": {
