@@ -17,13 +17,13 @@ const ALPHA_CH = 3;
  * @see https://github.com/thx/resvg-js
  */
 export function getVisiblePixelBounds(svg: string, vb: ViewBox): ViewBox {
-    // negative viewBox width/height is an error; 0 disables rendering.
-    // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
-    if (vb.width <= 0 || vb.height <= 0) {
-        return { ...vb, width: 0, height: 0 };
-    }
-
-    const img = new Resvg(svg).render();
+    const geometricPrecision = 2;
+    const resvg = new Resvg(svg, {
+        shapeRendering: geometricPrecision,
+        textRendering: geometricPrecision,
+        font: { loadSystemFonts: false },
+    });
+    const img = resvg.render();
     const pixels = img.pixels;
 
     assert.equal(
@@ -37,6 +37,7 @@ export function getVisiblePixelBounds(svg: string, vb: ViewBox): ViewBox {
     let boxT = img.height;
     let boxR = -1;
     let boxB = -1;
+    let hasVisiblePixel = false;
 
     // scan the 'intersected' bounds and extend 'optimal' bounds when non-visible pixels are met.
     for (let y = 0; y < img.height; y++) {
@@ -46,11 +47,22 @@ export function getVisiblePixelBounds(svg: string, vb: ViewBox): ViewBox {
             const alpha = pixels[rowStart + x * CH + ALPHA_CH]!;
             if (alpha <= 0) continue; // skip invisible pixels.
 
+            hasVisiblePixel = true;
             boxL = Math.min(boxL, x);
             boxT = Math.min(boxT, y);
             boxR = Math.max(boxR, x);
             boxB = Math.max(boxB, y);
         }
+    }
+
+    // Preserve a valid minimal viewBox when the rendered image is fully transparent.
+    if (!hasVisiblePixel) {
+        return {
+            x: vb.x,
+            y: vb.y,
+            width: 1,
+            height: 1,
+        };
     }
 
     return {
@@ -59,4 +71,30 @@ export function getVisiblePixelBounds(svg: string, vb: ViewBox): ViewBox {
         width: boxR - boxL + 1,
         height: boxB - boxT + 1,
     };
+}
+
+/** Builds a fallback viewBox from width/height attributes when viewBox is absent. */
+export function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBox {
+    return {
+        x: 0,
+        y: 0,
+        width: finiteNumOrZero(attributes.width),
+        height: finiteNumOrZero(attributes.height),
+    };
+}
+
+function finiteNumOrZero(value?: string): number {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+}
+
+/** Parses an SVG `viewBox` attribute into numeric coordinates. */
+export function parseViewBoxAttr(attr: string): ViewBox {
+    const list = attr.trim().split(/[ ,]+/).map(finiteNumOrZero);
+    if (list.length !== 4) {
+        throw new Error(
+            `[/svg/@viewBox] Invalid attribute. Expected viewBox to specify 4 parts, got "${attr}".`,
+        );
+    }
+    return { x: list[0]!, y: list[1]!, width: list[2]!, height: list[3]! };
 }

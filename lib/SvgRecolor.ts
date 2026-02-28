@@ -131,9 +131,10 @@ export default class SvgRecolor {
         const message = 'Expected a monochrome (single-color) SVG, but found multiple colors.';
         if (this.onColorIssue === 'warn') {
             console.warn(message);
+            throw new ControlFlowRollback(message);
         } else if (this.onColorIssue === 'rollback') {
             throw new ControlFlowRollback(message);
-        } else {
+        } else if (this.onColorIssue === 'fail') {
             throw new ControlFlowBreak(message);
         }
     }

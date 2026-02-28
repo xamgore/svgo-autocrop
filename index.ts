@@ -22,6 +22,53 @@ const autocrop: CustomPlugin<CropParams> = {
     },
 };
 
+/**
+ * Safe preset, just cropping SVGs.
+ * Changes only the `viewBox` attribute, keeping the rest of the SVG untouched to minimize visual risk.
+ * Read more in `README.md`.
+ */
+export const paramsToBeSafe: CropParams = {
+    autocrop: true,
+    disableTranslate: true,
+    includeWidthAndHeightAttributes: false,
+    // keep the same.
+    removeClass: false,
+    removeStyle: false,
+    removeDeprecated: false,
+    setColor: undefined,
+};
+
+/**
+ * Preferred preset for optimizing SVGs.
+ * Crops and cleans output while preserving original colors and paint attributes.
+ * Read more in `README.md`.
+ */
+export const paramsToBeOptimized: CropParams = {
+    autocrop: true,
+    // omits everything except the graphics.
+    includeWidthAndHeightAttributes: false,
+    removeClass: true,
+    removeStyle: true,
+    removeDeprecated: true,
+    // keep the same.
+    setColor: undefined,
+};
+
+/**
+ * Preset tuned for icon packs: crops and normalizes SVGs to monochrome.
+ * Uses `currentColor` so icons automatically adapt to light and dark themes.
+ * Read more in `README.md`.
+ */
+export const paramsToBeMonochrome: CropParams = {
+    autocrop: true,
+    includeWidthAndHeightAttributes: false,
+    removeClass: false,
+    removeStyle: false,
+    removeDeprecated: true,
+    setColor: 'currentColor',
+    setColorIssue: 'rollback',
+};
+
 /** Public options accepted by the `autocrop` plugin. */
 export type { CropParams };
 /** Default export for SVGO plugin registration. */

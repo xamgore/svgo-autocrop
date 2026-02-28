@@ -4,7 +4,11 @@ import type { PluginInfo, XastElement, XastRoot } from 'svgo';
 
 import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
 import Ensure from './Ensure.ts';
-import { getVisiblePixelBounds } from './ImageUtils.ts';
+import {
+    deriveViewBoxFromDimensions,
+    getVisiblePixelBounds,
+    parseViewBoxAttr,
+} from './ImageUtils.ts';
 import SvgRecolor, { RecolorParams } from './SvgRecolor.ts';
 import SvgRemoveClass, { RemoveClassParams } from './SvgRemoveClass.ts';
 import SvgRemoveDeprecated, { RemoveDeprecatedParams } from './SvgRemoveDeprecated.ts';
@@ -96,9 +100,8 @@ export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo)
             });
         }
 
-        const vb = svg.attributes.viewBox
-            ? parseViewBoxAttr(svg.attributes.viewBox)
-            : deriveViewBoxFromDimensions(svg.attributes);
+        const vb = resolveViewBoxForAutocrop(svg.attributes);
+        svg.attributes.viewBox = `${vb.x} ${vb.y} ${vb.width} ${vb.height}`;
 
         // ensure width & height are absent for correct rendering.
         const hasDimensions = Boolean(svg.attributes.width || svg.attributes.height);
@@ -141,6 +144,31 @@ export function plugin(ast: XastRoot, params: CropParams = {}, info: PluginInfo)
             throw e;
         }
     }
+}
+
+/**
+ * For successful rendering the viewbooks attribute must be present. This function first tries extracting it
+ * from the view viewbooks attribute, or form width & height attributes otherwise. If the gotten viewbox is
+ * somehow invalid, it's replaced onto zeroed one.
+ */
+export function resolveViewBoxForAutocrop(attributes: Record<string, string>): ViewBox {
+    // first try the attributed viewbox, cropping goes from within.
+    const vb = attributes.viewBox
+        ? parseViewBoxAttr(attributes.viewBox)
+        : deriveViewBoxFromDimensions(attributes);
+
+    // invalid width/height are replaced onto zero forcing resvg to render the whole image.
+    // https://svgwg.org/svg2-draft/coords.html#ViewBoxAttribute
+    if (
+        !Number.isFinite(vb.width) ||
+        !Number.isFinite(vb.height) ||
+        vb.width <= 0 ||
+        vb.height <= 0
+    ) {
+        return { ...vb, width: 0, height: 0 };
+    }
+
+    return vb;
 }
 
 /** Runs a mutating transform and restores the original SVG node on rollback-worthy failures. */
@@ -197,30 +225,4 @@ function addPadding(
     } else {
         throw Ensure.unexpectedObject('Unsupported padding specified', padding);
     }
-}
-
-/** Builds a fallback viewBox from width/height attributes when viewBox is absent. */
-function deriveViewBoxFromDimensions(attributes: Record<string, string>): ViewBox {
-    return {
-        x: 0,
-        y: 0,
-        width: Ensure.integer(attributes.width, '/svg/@width'),
-        height: Ensure.integer(attributes.height, '/svg/@height'),
-    };
-}
-
-/** Parses an SVG `viewBox` attribute into numeric coordinates. */
-function parseViewBoxAttr(attr: string): ViewBox {
-    const array = attr.split(/[ ,]+/, 4);
-    if (array.length !== 4) {
-        throw new Error(
-            `[/svg/@viewBox] Invalid attribute. Expected viewBox to specify 4 parts, got "${attr}".`,
-        );
-    }
-    return {
-        x: Ensure.integer(array[0], '/svg/@viewBox#0'),
-        y: Ensure.integer(array[1], '/svg/@viewBox#1'),
-        width: Ensure.integer(array[2], '/svg/@viewBox#2'),
-        height: Ensure.integer(array[3], '/svg/@viewBox#3'),
-    };
 }

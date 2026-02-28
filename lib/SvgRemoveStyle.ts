@@ -21,6 +21,9 @@ export type RemoveStyleParams = {
  *
  * Conflicts with these internal plugins:
  * - https://svgo.dev/docs/plugins/convertStyleToAttrs/
+ * Prefer using these internal plugins:
+ * - `inlineStyles { onlyMatchedOnce: false }`
+ * - `convertStyleToAttrs`
  */
 export default class SvgRemoveStyle {
     remove(ast: XastRoot) {

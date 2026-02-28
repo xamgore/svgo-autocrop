@@ -1,11 +1,17 @@
 import { SVGPathData } from 'svg-pathdata';
 import type { XastChild, XastElement, XastRoot } from 'svgo';
 
-import { ControlFlowBreak, ControlFlowRollback } from './ControlFlowErrors.ts';
+import { ControlFlowRollback } from './ControlFlowErrors.ts';
 import Ensure from './Ensure.ts';
 import { stringifyTree } from './SvgUtils.ts';
 
-/** Translates SVG geometry by a fixed x/y offset. */
+/**
+ * Translates SVG geometry by a fixed x/y offset.
+ *
+ * Depends on these internal plugins:
+ * - `convertTransform`
+ * - `convertShapeToPath`
+ */
 export default class SvgTranslate {
     constructor(
         private x: number,
@@ -277,7 +283,7 @@ export default class SvgTranslate {
                 `  ${stringifyTree(node).slice(0, 120)}\n` +
                 `You need to make sure the plugin is enabled in the SVGO configuration file.\n` +
                 `Read more: https://svgo.dev/docs/plugins/${pluginName}/`;
-            throw new ControlFlowBreak(err);
+            throw new ControlFlowRollback(err);
         }
     }
 

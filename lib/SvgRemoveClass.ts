@@ -5,13 +5,13 @@ import { removeAttributesBySelector } from './SvgUtils.ts';
 /** Options for class-attribute cleanup. */
 export type RemoveClassParams = {
     /**
-     * Removes all `class` attributes when `true`.
+     * Removes all `class` attributes when `true`. Default is `false`.
      */
     removeClass?: boolean;
 };
 
 /**
- * Removes CSS class metadata that is usually accidental for icon assets.
+ * Removes CSS class attributes that is common in icon packs.
  *
  * Upstream icon packs often embed pack-specific class names (`bi bi-...`, `icon-...`)
  * that are useful in an HTML sprite workflow, but become baggage in a raw SVG
@@ -22,6 +22,10 @@ export type RemoveClassParams = {
  * behave consistently regardless of where they are embedded. It exists only because
  * the internal plugin `removeUnknownsAndDefaults` doesn't remove the class attribute
  * at typical elements like `rect`, `path`, `svg`.
+ *
+ * Depends on these internal plugins:
+ * - `inlineStyles: { onlyMatchedOnce: false }`
+ * - `convertStyleToAttrs`
  */
 export default class SvgRemoveClass {
     remove(ast: XastRoot) {

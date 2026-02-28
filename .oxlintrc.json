@@ -8,7 +8,7 @@
     "env": {
         "builtin": true
     },
-    "ignorePatterns": ["node_modules/**", "coverage/**", "scripts/**", ".tmp/**"],
+    "ignorePatterns": ["node_modules/**", "coverage/**", "scripts/**", ".tmp/**", "*.mjs"],
     "plugins": ["eslint", "unicorn", "typescript", "oxc", "import", "node", "promise", "jest"],
     "jsPlugins": [{ "name": "jsdoc-js", "specifier": "eslint-plugin-jsdoc" }],
     "rules": {
@@ -20,6 +20,7 @@
         "no-negated-condition": "off",
         "no-warning-comments": "off",
         "prefer-const": "error",
+        "jest/no-conditional-in-test": "off",
         "jsdoc-js/require-jsdoc": [
             "error",
             {
@@ -35,6 +36,7 @@
         "typescript/no-extraneous-class": "off",
         "typescript/strict-boolean-expressions": "off",
         "typescript/prefer-nullish-coalescing": "off",
+        "unicorn/no-array-callback-reference": "off",
         "unicorn/no-static-only-class": "off"
     },
     "overrides": [

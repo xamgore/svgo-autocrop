@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`crops an SVG with a path 1`] = `"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>"`;
+
+exports[`crops each SVG at the same source individually 1`] = `"<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg" class="root-1"><rect x="0" y="0" width="10" height="10"/></svg><svg viewBox="0 0 12 11" xmlns="http://www.w3.org/2000/svg" class="root-2"><rect x="0" y="0" width="12" height="11"/></svg>"`;

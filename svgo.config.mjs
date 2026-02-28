@@ -1,4 +1,4 @@
-import autocrop from 'svgo-autocrop';
+import autocrop from '@strebz/svgo-autocrop';
 
 /**
  * The below configuration is for monotone (i.e. single color) svgs. Any colour will be replaced with 'currentColor' so the color is inherited from the html/css.
@@ -7,33 +7,26 @@ import autocrop from 'svgo-autocrop';
  */
 
 const config = {
-    // Keep running optimizations until doesn't optimize anymore.
-    multipass: true,
+    multipass: true, // keep running optimizations until they optimize.
     plugins: [
-        // Use SVGO's standard baseline optimization set.
-        // https://svgo.dev/docs/preset-default/
-        'preset-default',
-
-        // Removes the width and height attribute from the top-most <svg> element if specified, and replaces it with the viewBox attribute if it's missing.
-        // https://svgo.dev/docs/plugins/removeDimensions/
+        {
+            // https://svgo.dev/docs/preset-default/
+            name: 'preset-default',
+            params: {
+                overrides: {
+                    convertPathData: { floatPrecision: 6 }, // keeps complex self-intersecting paths visually stable
+                    inlineStyles: { onlyMatchedOnce: false }, // inlines CSS defined by class attributes.
+                    removeUnknownsAndDefaults: {
+                        keepDataAttrs: false,
+                    },
+                },
+            },
+        },
         'removeDimensions',
-
-        {
-            name: 'removeUnknownsAndDefaults',
-            params: {
-                keepDataAttrs: true,
-            },
-        },
-
-        // Removes deprecated attributes from elements in the document.
-        // https://svgo.dev/docs/plugins/removeDeprecatedAttrs/
-        {
-            name: 'removeDeprecatedAttrs',
-            params: {
-                removeAny: true,
-            },
-        },
-
+        'removeScripts',
+        'convertStyleToAttrs',
+        'convertShapeToPath',
+        { name: 'removeDeprecatedAttrs', params: { removeAny: true } },
         {
             ...autocrop,
             params: {
@@ -42,22 +35,10 @@ const config = {
                 removeClass: true,
                 removeStyle: true,
                 removeDeprecated: true,
-                setColor: 'currentColor',
-                setColorIssue: 'rollback',
+                setColor: undefined,
+                setColorIssue: 'warn',
             },
         },
-
-        // Keep styles consistent
-        // https://svgo.dev/docs/plugins/convertStyleToAttrs/
-        'convertStyleToAttrs',
-
-        // Remove <style> if present in svg
-        // https://svgo.dev/docs/plugins/removeStyleElement/
-        'removeStyleElement',
-
-        // Remove <script> if present in svg
-        // https://svgo.dev/docs/plugins/removeScripts/
-        'removeScripts',
     ],
 };
 
