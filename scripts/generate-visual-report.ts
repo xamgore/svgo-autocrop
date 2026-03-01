@@ -944,7 +944,7 @@ async function loadSvgoConfig(): Promise<Config> {
     try {
         const config = await loadConfig(SVGO_CONFIG_FILE, ROOT);
         if (config && typeof config === 'object') {
-            return config;
+            return forceDisableTranslateForAutocrop(config);
         }
     } catch (error) {
         console.warn(toErrorMessage(error));
@@ -954,12 +954,54 @@ async function loadSvgoConfig(): Promise<Config> {
     const injected = tryLoadConfigByInjectingAutocrop();
     if (injected) {
         console.warn(`Loaded ${path.relative(ROOT, SVGO_CONFIG_FILE)} via ad-hoc injection.`);
-        return injected;
+        return forceDisableTranslateForAutocrop(injected);
     }
 
     throw new Error(
         `Could not load ${path.relative(ROOT, SVGO_CONFIG_FILE)}. Fix the config import path and retry.`,
     );
+}
+
+function forceDisableTranslateForAutocrop(config: Config): Config {
+    const plugins = (config as { plugins?: unknown }).plugins;
+    if (!Array.isArray(plugins)) {
+        return config;
+    }
+
+    let didPatch = false;
+    const patchedPlugins = plugins.map((entry) => {
+        if (!entry || typeof entry !== 'object') {
+            return entry;
+        }
+
+        const plugin = entry as { name?: unknown; params?: unknown };
+        if (plugin.name !== 'autocrop') {
+            return entry;
+        }
+
+        const params =
+            plugin.params && typeof plugin.params === 'object'
+                ? (plugin.params as Record<string, unknown>)
+                : {};
+
+        didPatch = true;
+        return {
+            ...plugin,
+            params: {
+                ...params,
+                disableTranslate: true,
+            },
+        };
+    });
+
+    if (!didPatch) {
+        return config;
+    }
+
+    return {
+        ...config,
+        plugins: patchedPlugins,
+    };
 }
 
 function tryLoadConfigByInjectingAutocrop(): Config | null {

@@ -42,7 +42,7 @@ it('satisfies idempotence', () => {
     expect(second).toEqual(first);
 });
 
-// todo: for the best time.
+// oxlint-disable-next-line jest/no-disabled-tests todo: for the best time.
 it.skip('produces fractional viewBox size', () => {
     const svg = runPlugin(
         `
