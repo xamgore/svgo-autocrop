@@ -162,6 +162,6 @@ Preset tuned for icon packs: crops and normalizes SVGs to monochrome. Uses `curr
 
 - Translation is usually helpful, but may occasionally increase file size. For example, when converting relative commands to absolute. Rescaling approach could theoretically solve this problem (see SVGO issues [#791](https://github.com/svg/svgo/issues/791) and [#1270](https://github.com/svg/svgo/issues/1270)).
 
-- SVGO presets [can break SVGs](https://github.com/svg/svgo/issues?q=type%3A%22Bug%22%20state%3Aopen)—use the visual regression tool to verify output. Put your SVGs into `fixtures/`, run `pnpm run report:visual`, review the report in your browser. If something looks off, adjust `svgo.config.mjs` and regenerate until the output is stable.
-
 - To recalculate bounds from the full drawing area, first run SVGO with `removeViewBox` and `removeDimensions`, then run this plugin to compute fresh `viewBox`, `width`, and `height`.
+
+- SVGO presets [can break SVGs](https://github.com/svg/svgo/issues?q=type%3A%22Bug%22%20state%3Aopen)—use the visual regression tool to verify output. Put your SVGs into `fixtures/`, run `pnpm run report:visual`, review the report in your browser. If something looks off, adjust `svgo.config.mjs` and regenerate until the output is stable.<br><br><img src=".github/report.webp" width="480" alt="report demo">
